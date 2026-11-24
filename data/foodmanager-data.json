@@ -1,0 +1,2548 @@
+{
+  "version": 2,
+  "recipes": [
+    {
+      "id": "rec-arroz-contramuslos-dorados",
+      "name": "Arroz con contramuslos dorados",
+      "description": "Plato combinado todoterreno en una sola sartén con arroz blanco, contramuslos deshuesados de piel ultra crujiente, espárragos salteados y salsa rápida de limón y pimienta (Diegodoal).",
+      "servingsYield": 2,
+      "prepTimeMinutes": 25,
+      "emoji": "🍗",
+      "tags": [
+        "Comida",
+        "Cena",
+        "Rápido",
+        "Saludable",
+        "Caliente"
+      ],
+      "ingredients": [
+        {
+          "id": "ing-acd-1",
+          "name": "Contramuslos de pollo",
+          "quantity": 400,
+          "unit": "g",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-acd-2",
+          "name": "Arroz blanco",
+          "quantity": 160,
+          "unit": "g",
+          "category": "legumbres_cereales",
+          "optional": false
+        },
+        {
+          "id": "ing-acd-3",
+          "name": "Espárragos verdes",
+          "quantity": 250,
+          "unit": "g",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-acd-4",
+          "name": "Caldo de pollo",
+          "quantity": 150,
+          "unit": "ml",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-acd-5",
+          "name": "Limón",
+          "quantity": 0.5,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-acd-6",
+          "name": "Aceite de oliva virgen extra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-acd-7",
+          "name": "Pimienta negra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-acd-8",
+          "name": "Sal",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-acd-9",
+          "name": "Nata para cocinar",
+          "quantity": 30,
+          "unit": "ml",
+          "category": "lacteos_huevos",
+          "optional": true
+        }
+      ],
+      "steps": [
+        {
+          "id": "st-acd-1",
+          "text": "Lavar y cocer el arroz blanco (o calentar el que tengas hecho en nevera). Doblar la base de los espárragos hasta que partan solos para retirar el extremo fibroso y deshuesar los contramuslos dejando la piel intacta.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-acd-1a",
+              "type": "tip",
+              "text": "Es una receta comodín: puedes cambiar los espárragos por brócoli en arbolitos, bimi, bok choy o espinacas según temporada."
+            },
+            {
+              "id": "nt-acd-1b",
+              "type": "tip",
+              "text": "Mantener la piel del contramuslo al deshuesarlo es clave porque protege la jugosidad de la carne y queda súper crujiente al dorar."
+            }
+          ]
+        },
+        {
+          "id": "st-acd-2",
+          "text": "Calentar una sartén amplia a fuego fuerte con un buen chorro de aceite de oliva y saltear los espárragos con una pizca de sal (1 minuto si son finos, 2 minutos si son gruesos) hasta que tuesten por partes pero sigan crujientes. Retirar y reservar.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-acd-2a",
+              "type": "tip",
+              "text": "Si usas arbolitos de brócoli bastan ~1,5 minutos; si son espinacas frescas, apenas 30 segundos. Hacer todo en la misma sartén ahorra fregar entre semana."
+            }
+          ]
+        },
+        {
+          "id": "st-acd-3",
+          "text": "Bajar a fuego medio-alto y colocar en la misma sartén los contramuslos sazonados con la piel hacia abajo durante 3-4 minutos hasta que queden muy dorados. Darles la vuelta, salar el lado de la piel y cocinar 2 minutos más; retirar y reservar.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-acd-3a",
+              "type": "tip",
+              "text": "Ponles un peso encima al principio para que la piel haga contacto total con el metal y quede extra crujiente; voltearlos alguna vez ayuda a una cocción homogénea."
+            }
+          ]
+        },
+        {
+          "id": "st-acd-4",
+          "text": "Descartar la grasa sobrante de la sartén, verter los 150 ml de caldo de pollo y rascar bien el fondo tostado. Añadir el zumo de medio limón y abundante pimienta negra y reducir a fuego vivo hasta que espese ligeramente.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-acd-4a",
+              "type": "recordatorio",
+              "text": "Retira el exceso de aceite antes de desglasar pero no laves la sartén: los jugos caramelizados del fondo son toda la base de sabor de la salsa."
+            }
+          ]
+        },
+        {
+          "id": "st-acd-5",
+          "text": "Incorporar al final una nuez de crème fraîche o un chorrito de nata para cocinar y remover unos segundos para ligar y redondear la salsa.",
+          "optional": true,
+          "notes": []
+        },
+        {
+          "id": "st-acd-6",
+          "text": "Emplatar una base de arroz blanco junto con los espárragos salteados y los contramuslos crujientes, y salsear generosamente por encima.",
+          "optional": false,
+          "notes": []
+        }
+      ],
+      "recipeNotes": [
+        {
+          "id": "rn-acd-1",
+          "type": "tip",
+          "text": "Si guardas arroz blanco cocido en la nevera para 2-3 días (técnica del dedo: https://www.youtube.com/shorts/-6Bi4c027tU), tienes la cena lista en 10 minutos."
+        },
+        {
+          "id": "rn-acd-2",
+          "type": "tip",
+          "text": "Vídeo de referencia (Diegodoal - 5 recetas realistas para entre semana, 00:38): https://www.youtube.com/watch?v=FMwWUFQlZng&t=38s"
+        }
+      ],
+      "createdAt": "2026-11-24T22:00:01.000Z",
+      "updatedAt": "2026-11-24T22:00:01.000Z"
+    },
+    {
+      "id": "rec-dan-dan-noodles",
+      "name": "Dan dan noodles simplificados",
+      "description": "Versión exprés en 15 minutos y una sola sartén de los noodles sichuaneses cremosos y picantes, con carne picada dorada, cebolleta, crema de cacahuete y aceite de chile crujiente (Diegodoal).",
+      "servingsYield": 2,
+      "prepTimeMinutes": 15,
+      "emoji": "🍝",
+      "tags": [
+        "Comida",
+        "Cena",
+        "Pasta",
+        "Rápido",
+        "Caliente"
+      ],
+      "ingredients": [
+        {
+          "id": "ing-ddn-1",
+          "name": "Noodles",
+          "quantity": 200,
+          "unit": "g",
+          "category": "legumbres_cereales",
+          "optional": false
+        },
+        {
+          "id": "ing-ddn-2",
+          "name": "Carne picada",
+          "quantity": 250,
+          "unit": "g",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-ddn-3",
+          "name": "Cebolleta china",
+          "quantity": 3,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-ddn-4",
+          "name": "Crema de cacahuete",
+          "quantity": 2,
+          "unit": "cucharada",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-ddn-5",
+          "name": "Salsa de soja",
+          "quantity": 1,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-ddn-6",
+          "name": "Vinagre",
+          "quantity": 1,
+          "unit": "cucharada",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-ddn-7",
+          "name": "Aceite de chile crujiente (Lao Gan Ma)",
+          "quantity": 1.5,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-ddn-8",
+          "name": "Azúcar",
+          "quantity": 0.5,
+          "unit": "cucharadita",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-ddn-9",
+          "name": "Aceite de oliva virgen extra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-ddn-10",
+          "name": "Pimienta negra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-ddn-11",
+          "name": "Sal",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-ddn-12",
+          "name": "Salsa hoisin (o de ostras)",
+          "quantity": 1,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": true
+        },
+        {
+          "id": "ing-ddn-13",
+          "name": "Pimienta de Sichuan",
+          "quantity": 0.5,
+          "unit": "cucharadita",
+          "category": "especias_salsas",
+          "optional": true
+        }
+      ],
+      "steps": [
+        {
+          "id": "st-ddn-1",
+          "text": "Picar finas las 3 cebolletas chinas. Salpimentar la carne picada (y mezclarla opcionalmente con una cucharada de salsa hoisin, de ostras, de soja o inglesa).",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ddn-1a",
+              "type": "tip",
+              "text": "Si no tienes cebolleta china puedes sustituirla sin problema por ajetes tiernos o por media cebolla normal picada muy fina."
+            }
+          ]
+        },
+        {
+          "id": "st-ddn-2",
+          "text": "Mezclar en un bol la salsa: las 2 cucharadas colmadas de crema de cacahuete, la salsa de soja, cualquier vinagre, el aceite de chile crujiente (Lao Gan Ma al gusto) y la pizca de azúcar (más pimienta de Sichuan molida si tienes).",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ddn-2a",
+              "type": "tip",
+              "text": "Puedes cambiar la crema de cacahuete por tahini (pasta de sésamo) según lo que tengas más fácil en la despensa."
+            }
+          ]
+        },
+        {
+          "id": "st-ddn-3",
+          "text": "Llenar una sartén amplia con agua, cocer los noodles según el paquete y, antes de escurrirlos, reservar medio vaso del agua de cocción para diluir un poco la salsa del bol.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ddn-3a",
+              "type": "recordatorio",
+              "text": "Guardar agua de cocción antes de colar es imprescindible para aligerar la crema de cacahuete y que luego envuelva sedosa los noodles."
+            },
+            {
+              "id": "nt-ddn-3b",
+              "type": "tip",
+              "text": "Valen tus noodles favoritos e incluso espaguetis finos en un apuro."
+            }
+          ]
+        },
+        {
+          "id": "st-ddn-4",
+          "text": "En esa misma sartén ya escurrida, añadir un chorrito de aceite y dorar bien la carne picada a fuego vivo desmenuzándola con una espátula.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ddn-4a",
+              "type": "recordatorio",
+              "text": "Si marinaste la carne con alguna salsa, los azúcares harán que se agarre un poco al fondo: ráscala o añade un chorrito de agua para despegarla sin que se queme."
+            }
+          ]
+        },
+        {
+          "id": "st-ddn-5",
+          "text": "Cuando la carne esté bien dorada, incorporar la cebolleta china y saltear 30 segundos. Añadir los noodles y la salsa diluida, mezclar bien al fuego y ajustar con un poco más de agua de cocción si pide más cremosidad.",
+          "optional": false,
+          "notes": []
+        }
+      ],
+      "recipeNotes": [
+        {
+          "id": "rn-ddn-1",
+          "type": "tip",
+          "text": "Todo en una sola sartén y listo en 15 minutos reales con ingredientes fáciles de despensa."
+        },
+        {
+          "id": "rn-ddn-2",
+          "type": "recordatorio",
+          "text": "Si guardas ración en tupper, añade una o dos cucharadas de agua antes de calentar porque la crema de cacahuete espesa en frío."
+        },
+        {
+          "id": "rn-ddn-3",
+          "type": "tip",
+          "text": "Vídeo de referencia (Diegodoal - 5 recetas realistas para entre semana, 03:42): https://www.youtube.com/watch?v=FMwWUFQlZng&t=222s"
+        }
+      ],
+      "createdAt": "2026-11-24T22:00:02.000Z",
+      "updatedAt": "2026-11-24T22:00:02.000Z"
+    },
+    {
+      "id": "rec-ensalada-noquis-horno",
+      "name": "Ensalada templada de ñoquis al horno",
+      "description": "Ensalada templada de ñoquis (gnocchis) horneados directamente hasta quedar crujientes con cherries reventados, cebolla morada, vinagreta de ajo asado con limón y parmesano, rúcula y hierbas frescas (Diegodoal).",
+      "servingsYield": 2,
+      "prepTimeMinutes": 40,
+      "emoji": "🥗",
+      "tags": [
+        "Comida",
+        "Cena",
+        "Horno",
+        "Vegetariano",
+        "Saludable"
+      ],
+      "ingredients": [
+        {
+          "id": "ing-enh-1",
+          "name": "Ñoquis de patata",
+          "quantity": 500,
+          "unit": "g",
+          "category": "legumbres_cereales",
+          "optional": false
+        },
+        {
+          "id": "ing-enh-2",
+          "name": "Tomates cherry",
+          "quantity": 250,
+          "unit": "g",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-enh-3",
+          "name": "Cebolla morada",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-enh-4",
+          "name": "Ajo",
+          "quantity": 3,
+          "unit": "diente",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-enh-5",
+          "name": "Limón",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-enh-6",
+          "name": "Queso parmesano rallado",
+          "quantity": 50,
+          "unit": "g",
+          "category": "lacteos_huevos",
+          "optional": false
+        },
+        {
+          "id": "ing-enh-7",
+          "name": "Rúcula",
+          "quantity": 60,
+          "unit": "g",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-enh-8",
+          "name": "Menta fresca",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-enh-9",
+          "name": "Perejil fresco",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-enh-10",
+          "name": "Aceite de oliva virgen extra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-enh-11",
+          "name": "Pimienta negra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-enh-12",
+          "name": "Sal",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-enh-13",
+          "name": "Piparras encurtidas",
+          "quantity": 6,
+          "unit": "ud",
+          "category": "conservas_aceites",
+          "optional": true
+        },
+        {
+          "id": "ing-enh-14",
+          "name": "Pollo, bacon o huevo duro",
+          "quantity": 150,
+          "unit": "g",
+          "category": "carnes_pescados",
+          "optional": true
+        }
+      ],
+      "steps": [
+        {
+          "id": "st-enh-1",
+          "text": "Precalentar el horno a 200 °C con ventilador. Repartir en una bandeja el paquete de ñoquis tal cual (sin cocer), unos 20 tomates cherry, la cebolla morada en gajos con las capas separadas y los 3 dientes de ajo.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-enh-1a",
+              "type": "recordatorio",
+              "text": "No cuezas antes los ñoquis en agua: van del paquete directo a la bandeja para quedar crujientes por fuera y tiernos por dentro."
+            },
+            {
+              "id": "nt-enh-1b",
+              "type": "tip",
+              "text": "También puedes hacerlos en freidora de aire (airfryer) a 200 °C recortando unos minutos el tiempo."
+            }
+          ]
+        },
+        {
+          "id": "st-enh-2",
+          "text": "Añadir una pizca generosa de sal, abundante aceite de oliva y pimienta negra, y hornear durante 30-40 minutos removiendo cada 10 minutos para que se doren de forma uniforme.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-enh-2a",
+              "type": "tip",
+              "text": "Los cherries irán reventando llenos de umami y la cebolla se dorará más que el resto: queda dulce y riquísima."
+            }
+          ]
+        },
+        {
+          "id": "st-enh-3",
+          "text": "Pasar los 3 dientes de ajo asados a un bol amplio, machacarlos hasta formar una pasta y mezclarlos con el zumo de un limón, abundante pimienta negra y todo el parmesano rallado que te pida el cuerpo.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-enh-3a",
+              "type": "tip",
+              "text": "Esta mezcla con el ajo confitado y los propios jugos de la bandeja actúa directamente como la vinagreta cremosa de la ensalada."
+            }
+          ]
+        },
+        {
+          "id": "st-enh-4",
+          "text": "Incorporar al bol los ñoquis calientes con los tomates y la cebolla, dos buenos puñados de rúcula y las hierbas aromáticas picadas (menta y perejil).",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-enh-4a",
+              "type": "tip",
+              "text": "Puedes cambiar la rúcula por canónigos, espinacas o lechuga, y usar albahaca o eneldo según lo que tengas en casa."
+            }
+          ]
+        },
+        {
+          "id": "st-enh-5",
+          "text": "Añadir unas piparras encurtidas troceadas y, si buscas un extra de proteína, dados de pollo dorado, bacon, jamón cocido o huevo duro.",
+          "optional": true,
+          "notes": []
+        },
+        {
+          "id": "st-enh-6",
+          "text": "Mezclar bien y servir inmediatamente para disfrutar la ensalada templada mientras los ñoquis conservan su crujir.",
+          "optional": false,
+          "notes": []
+        }
+      ],
+      "recipeNotes": [
+        {
+          "id": "rn-enh-1",
+          "type": "tip",
+          "text": "Apenas lleva 5 minutos de trabajo real porque casi todo el tiempo es de horno sin vigilancia; luce genial tanto de plato único para 2 como de centro de mesa para 4."
+        },
+        {
+          "id": "rn-enh-2",
+          "type": "recordatorio",
+          "text": "Sírvela recién mezclada para que la rúcula no se mustie de más y el ñoqui mantenga el exterior crujiente."
+        },
+        {
+          "id": "rn-enh-3",
+          "type": "tip",
+          "text": "Vídeo de referencia (Diegodoal - 5 recetas realistas para entre semana, 07:23): https://www.youtube.com/watch?v=FMwWUFQlZng&t=443s"
+        }
+      ],
+      "createdAt": "2026-11-24T22:00:03.000Z",
+      "updatedAt": "2026-11-24T22:00:03.000Z"
+    },
+    {
+      "id": "rec-curry-verde-salmon",
+      "name": "Curry verde de salmón",
+      "description": "Curry tailandés rápido en una sola sartén con leche de coco caramelizada, pasta de curry verde, berenjena, cherries, espinacas y lomos de salmón pochados en su punto, acompañado de arroz blanco (Diegodoal).",
+      "servingsYield": 4,
+      "prepTimeMinutes": 30,
+      "emoji": "🍛",
+      "tags": [
+        "Comida",
+        "Cena",
+        "Pescado",
+        "Rápido",
+        "Batch cooking",
+        "Saludable",
+        "Caliente"
+      ],
+      "ingredients": [
+        {
+          "id": "ing-cvs-1",
+          "name": "Lomos de salmón",
+          "quantity": 500,
+          "unit": "g",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-cvs-2",
+          "name": "Leche de coco",
+          "quantity": 500,
+          "unit": "ml",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-cvs-3",
+          "name": "Pasta de curry verde",
+          "quantity": 1.5,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-cvs-4",
+          "name": "Arroz blanco",
+          "quantity": 300,
+          "unit": "g",
+          "category": "legumbres_cereales",
+          "optional": false
+        },
+        {
+          "id": "ing-cvs-5",
+          "name": "Berenjena",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-cvs-6",
+          "name": "Cebolla",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-cvs-7",
+          "name": "Tomates cherry",
+          "quantity": 150,
+          "unit": "g",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-cvs-8",
+          "name": "Espinacas frescas",
+          "quantity": 100,
+          "unit": "g",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-cvs-9",
+          "name": "Ajo",
+          "quantity": 3,
+          "unit": "diente",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-cvs-10",
+          "name": "Jengibre fresco",
+          "quantity": 15,
+          "unit": "g",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-cvs-11",
+          "name": "Azúcar moreno",
+          "quantity": 1,
+          "unit": "cucharadita",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-cvs-12",
+          "name": "Aceite vegetal suave",
+          "quantity": 1,
+          "unit": "cucharada",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-cvs-13",
+          "name": "Sal",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-cvs-14",
+          "name": "Salsa de pescado",
+          "quantity": 1,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": true
+        },
+        {
+          "id": "ing-cvs-15",
+          "name": "Cilantro fresco",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "verduras_frutas",
+          "optional": true
+        },
+        {
+          "id": "ing-cvs-16",
+          "name": "Albahaca fresca",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "verduras_frutas",
+          "optional": true
+        }
+      ],
+      "steps": [
+        {
+          "id": "st-cvs-1",
+          "text": "Trocear la berenjena y sumergirla en agua con una pizca generosa de sal; cortar la cebolla en juliana y picar muy finos los 3 dientes de ajo y una cantidad equivalente de jengibre fresco. Poner a cocer el arroz blanco aparte.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-cvs-1a",
+              "type": "tip",
+              "text": "El remojo en agua con sal evita que la berenjena se oxide y hace que quede bien sazonada por dentro."
+            },
+            {
+              "id": "nt-cvs-1b",
+              "type": "tip",
+              "text": "Admite cualquier verdura de nevera: calabacín, calabaza, patata, nabo, zanahoria, repollo o setas."
+            }
+          ]
+        },
+        {
+          "id": "st-cvs-2",
+          "text": "Calentar en una sartén honda el aceite neutro con unos 50 ml de la leche de coco y reducir hasta que caramelice ligeramente y empiece a chisporrotear.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-cvs-2a",
+              "type": "recordatorio",
+              "text": "Asegúrate de comprar leche de coco con al menos un 70 % de coco (no bebida aguada) para que separe su grasa y potencie el sabor al caramelizar."
+            }
+          ]
+        },
+        {
+          "id": "st-cvs-3",
+          "text": "Añadir el ajo y el jengibre, sofreír brevemente y sumar de 1 a 2 cucharadas de pasta de curry verde, rehogando 1 minuto para despertar los aromáticos.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-cvs-3a",
+              "type": "tip",
+              "text": "Puedes usar pasta de curry de cualquier color o, si no tienes, 1 cucharada de curry en polvo clásico para darle un perfil más indio."
+            }
+          ]
+        },
+        {
+          "id": "st-cvs-4",
+          "text": "Verter los 450 ml restantes de leche de coco e integrar. Añadir los tomates cherry, la cebolla en juliana, el azúcar moreno y un chorrito de salsa de pescado (o sal) y cocer suave 5 minutos; incorporar la berenjena escurrida y cocinar tapado a fuego medio otros 5-6 minutos hasta que ablande.",
+          "optional": false,
+          "notes": []
+        },
+        {
+          "id": "st-cvs-5",
+          "text": "Acomodar los lomos de salmón entre las verduras, bajar a fuego medio-bajo y cocinar tapado apenas 3-4 minutos hasta que el pescado esté tierno y jugoso.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-cvs-5a",
+              "type": "tip",
+              "text": "Al ser un pescado graso y cocinarse suavemente en la salsa, el salmón queda muy meloso incluso al recalentarlo."
+            }
+          ]
+        },
+        {
+          "id": "st-cvs-6",
+          "text": "Incorporar las espinacas frescas (y opcionalmente cilantro y albahaca), tapar 1 minuto final para que caigan con el vapor y servir junto con arroz blanco.",
+          "optional": false,
+          "notes": []
+        }
+      ],
+      "recipeNotes": [
+        {
+          "id": "rn-cvs-1",
+          "type": "tip",
+          "text": "De un día para otro los currys están todavía más sabrosos, así que funciona de maravilla en tupper con una ración de arroz blanco."
+        },
+        {
+          "id": "rn-cvs-2",
+          "type": "tip",
+          "text": "Vídeo de referencia (Diegodoal - 5 recetas realistas para entre semana, 09:51): https://www.youtube.com/watch?v=FMwWUFQlZng&t=591s"
+        }
+      ],
+      "createdAt": "2026-11-24T22:00:04.000Z",
+      "updatedAt": "2026-11-24T22:00:04.000Z"
+    },
+    {
+      "id": "rec-oyakodon",
+      "name": "Oyakodon",
+      "description": "Clásico bol japonés reconfortante ('padre e hijo') de contramuslo de pollo tierno, cebolla y huevo meloso cocinados en caldo con soja y servidos sobre arroz blanco caliente (Diegodoal).",
+      "servingsYield": 1,
+      "prepTimeMinutes": 15,
+      "emoji": "🍳",
+      "tags": [
+        "Comida",
+        "Cena",
+        "Rápido",
+        "Saludable",
+        "Caliente"
+      ],
+      "ingredients": [
+        {
+          "id": "ing-oyk-1",
+          "name": "Contramuslos de pollo",
+          "quantity": 200,
+          "unit": "g",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-oyk-2",
+          "name": "Arroz blanco",
+          "quantity": 100,
+          "unit": "g",
+          "category": "legumbres_cereales",
+          "optional": false
+        },
+        {
+          "id": "ing-oyk-3",
+          "name": "Huevo",
+          "quantity": 2,
+          "unit": "ud",
+          "category": "lacteos_huevos",
+          "optional": false
+        },
+        {
+          "id": "ing-oyk-4",
+          "name": "Cebolla",
+          "quantity": 0.5,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-oyk-5",
+          "name": "Caldo de pollo",
+          "quantity": 200,
+          "unit": "ml",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-oyk-6",
+          "name": "Salsa de soja",
+          "quantity": 1,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-oyk-7",
+          "name": "Azúcar",
+          "quantity": 0.5,
+          "unit": "cucharadita",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-oyk-8",
+          "name": "Sal",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-oyk-9",
+          "name": "Sake",
+          "quantity": 1,
+          "unit": "cucharada",
+          "category": "conservas_aceites",
+          "optional": true
+        },
+        {
+          "id": "ing-oyk-10",
+          "name": "Cebolleta china",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": true
+        },
+        {
+          "id": "ing-oyk-11",
+          "name": "Shichimi togarashi",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": true
+        }
+      ],
+      "steps": [
+        {
+          "id": "st-oyk-1",
+          "text": "Tener listo arroz blanco bien caliente. Cortar la media cebolla en juliana mediana, picar la cebolleta china si se usa y cortar 2 contramuslos sin hueso ni piel en trozos de bocado con una pizca de sal.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-oyk-1a",
+              "type": "tip",
+              "text": "Aquí se retira la piel tirando de ella con la mano porque el pollo va cocido en caldo y no dorado."
+            }
+          ]
+        },
+        {
+          "id": "st-oyk-2",
+          "text": "En una sartén pequeña llevar a ebullición a fuego medio-alto los 200 ml de caldo de pollo con la cucharada de salsa de soja, la cucharada de sake (opcional) y una pizca de azúcar.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-oyk-2a",
+              "type": "tip",
+              "text": "Tradicionalmente se elabora con caldo dashi japonés, pero el caldo de pollo normal simplifica la receta con un resultado delicioso."
+            },
+            {
+              "id": "nt-oyk-2b",
+              "type": "recordatorio",
+              "text": "Usa una sartén pequeña (~18-20 cm) por cada bol individual para que el huevo cubra toda la base y se deslice entero sobre el arroz."
+            }
+          ]
+        },
+        {
+          "id": "st-oyk-3",
+          "text": "Cuando hierva, añadir la cebolla y cocer 3 minutos. Incorporar después los trozos de pollo bien repartidos y cocinar otros 3-4 minutos hasta que estén casi hechos.",
+          "optional": false,
+          "notes": []
+        },
+        {
+          "id": "st-oyk-4",
+          "text": "Mientras tanto, batir en un cuenco 1 huevo entero más 1 yema extra hasta obtener una mezcla homogénea.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-oyk-4a",
+              "type": "tip",
+              "text": "Usar 1 huevo + 1 yema aporta un extra de cremosidad; también puedes batirlo menos si prefieres vetas diferenciadas de clara y yema."
+            }
+          ]
+        },
+        {
+          "id": "st-oyk-5",
+          "text": "Añadir parte de la cebolleta china sobre el pollo y verter el huevo en un hilillo fino por toda la superficie. Tapar la sartén y dejar 1 minuto a fuego medio para que cuaje jugoso.",
+          "optional": false,
+          "notes": []
+        },
+        {
+          "id": "st-oyk-6",
+          "text": "Deslizar todo el conjunto de la sartén directamente sobre un bol de arroz blanco calentito.",
+          "optional": false,
+          "notes": []
+        },
+        {
+          "id": "st-oyk-7",
+          "text": "Coronar con más cebolleta china picada en crudo y un toque picante de shichimi togarashi.",
+          "optional": true,
+          "notes": []
+        }
+      ],
+      "recipeNotes": [
+        {
+          "id": "rn-oyk-1",
+          "type": "tip",
+          "text": "Las cantidades son para 1 bol grande individual; si planificas 2 raciones en el calendario, la app duplica sola las cantidades y basta con cuajar cada bol en 5-6 minutos uno tras otro."
+        },
+        {
+          "id": "rn-oyk-2",
+          "type": "tip",
+          "text": "Vídeo de referencia (Diegodoal - 5 recetas realistas para entre semana, 13:01): https://www.youtube.com/watch?v=FMwWUFQlZng&t=781s"
+        }
+      ],
+      "createdAt": "2026-11-24T22:00:05.000Z",
+      "updatedAt": "2026-11-24T22:00:05.000Z"
+    },
+    {
+      "id": "rec-fajitas-horno",
+      "name": "Fajitas de pollo al horno",
+      "description": "Fajitas rápidas en una sola bandeja de horno en 20 minutos, con contramuslo de pollo, trío de pimientos, cebolla morada y sazonador casero (Harrison Webb).",
+      "servingsYield": 3,
+      "prepTimeMinutes": 25,
+      "emoji": "🌮",
+      "tags": [
+        "Comida",
+        "Cena",
+        "Horno",
+        "Rápido",
+        "Saludable",
+        "Caliente"
+      ],
+      "ingredients": [
+        {
+          "id": "ing-fj-1",
+          "name": "Contramuslos de pollo",
+          "quantity": 200,
+          "unit": "g",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-2",
+          "name": "Pimiento rojo",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-3",
+          "name": "Pimiento amarillo",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-4",
+          "name": "Pimiento verde",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-5",
+          "name": "Cebolla morada",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-6",
+          "name": "Tortillas de trigo",
+          "quantity": 6,
+          "unit": "ud",
+          "category": "panaderia",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-7",
+          "name": "Pimentón",
+          "quantity": 2,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-8",
+          "name": "Orégano",
+          "quantity": 1,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-9",
+          "name": "Comino molido",
+          "quantity": 1,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-10",
+          "name": "Ajo en polvo",
+          "quantity": 1,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-11",
+          "name": "Chile en polvo",
+          "quantity": 0.5,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-12",
+          "name": "Cilantro molido",
+          "quantity": 0.5,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-13",
+          "name": "Azúcar",
+          "quantity": 0.5,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-14",
+          "name": "Aceite de oliva virgen extra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-15",
+          "name": "Pimienta negra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-16",
+          "name": "Sal",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-fj-17",
+          "name": "Aguacate",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": true
+        },
+        {
+          "id": "ing-fj-18",
+          "name": "Crema agria o yogur griego",
+          "quantity": 100,
+          "unit": "g",
+          "category": "lacteos_huevos",
+          "optional": true
+        },
+        {
+          "id": "ing-fj-19",
+          "name": "Salsa mexicana",
+          "quantity": 100,
+          "unit": "g",
+          "category": "especias_salsas",
+          "optional": true
+        },
+        {
+          "id": "ing-fj-20",
+          "name": "Lima",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": true
+        }
+      ],
+      "steps": [
+        {
+          "id": "st-fj-1",
+          "text": "Precalentar el horno a 200 °C. Cortar la cebolla morada en juliana y los tres pimientos y los contramuslos de pollo deshuesados en tiras de grosor similar, y repartirlos en una bandeja amplia de horno.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-fj-1a",
+              "type": "tip",
+              "text": "Aunque el texto del post indica 200 g de contramuslo, para equilibrar el volumen de los 3 pimientos van genial 400-500 g de pollo en la misma bandeja."
+            },
+            {
+              "id": "nt-fj-1b",
+              "type": "recordatorio",
+              "text": "Usa una bandeja grande para que las tiras queden extendidas en una sola capa y se asen en lugar de cocerse al vapor."
+            }
+          ]
+        },
+        {
+          "id": "st-fj-2",
+          "text": "Mezclar en un cuenco el sazonador casero: pimentón, orégano, comino, ajo en polvo, chile en polvo, cilantro molido, azúcar, sal y pimienta negra.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-fj-2a",
+              "type": "tip",
+              "text": "La media cucharada de azúcar equilibra las especias y ayuda a que los bordes del pollo y los pimientos caramelicen en el horno."
+            },
+            {
+              "id": "nt-fj-2b",
+              "type": "tip",
+              "text": "Sale bastante mezcla de sazonador (~6 cucharadas): sé generoso al espolvorear y guarda si te sobra un poco en un bote hermético para otra vez."
+            }
+          ]
+        },
+        {
+          "id": "st-fj-3",
+          "text": "Regar toda la bandeja con un buen chorro de aceite de oliva, espolvorear generosamente con el sazonador y mezclar muy bien con las manos hasta impregnar cada tira.",
+          "optional": false,
+          "notes": []
+        },
+        {
+          "id": "st-fj-4",
+          "text": "Hornear a 200 °C durante 20 minutos hasta que el pollo esté jugoso y dorado y los pimientos tiernos pero aún con un punto crujiente.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-fj-4a",
+              "type": "tip",
+              "text": "En los últimos 2 minutos puedes activar el grill si quieres las puntas de los pimientos ligeramente tostadas como a la parrilla."
+            }
+          ]
+        },
+        {
+          "id": "st-fj-5",
+          "text": "Calentar ligeramente las tortillas de trigo y montar las fajitas rellenando con el salteado de la bandeja.",
+          "optional": false,
+          "notes": []
+        },
+        {
+          "id": "st-fj-6",
+          "text": "Acompañar al gusto con aguacate laminado, crema agria (o yogur griego), salsa mexicana y un chorrito de lima recién exprimida.",
+          "optional": true,
+          "notes": []
+        }
+      ],
+      "recipeNotes": [
+        {
+          "id": "rn-fj-1",
+          "type": "tip",
+          "text": "El relleno aguanta perfecto 3-4 días en tupper; guarda las tortillas aparte y caliéntalas justo al momento de comer para que no se humedezcan."
+        },
+        {
+          "id": "rn-fj-2",
+          "type": "tip",
+          "text": "Post original (Harrison Webb - One-Tray Chicken Fajitas): https://www.instagram.com/p/C33VhHxy3jj/"
+        }
+      ],
+      "createdAt": "2026-11-24T16:07:00.000Z",
+      "updatedAt": "2026-11-24T21:06:50.651Z"
+    },
+    {
+      "id": "rec-lasana-sarten",
+      "name": "Lasaña exprés en sartén",
+      "description": "Lasaña rápida sin horno hecha íntegramente en una sola sartén, con boloñesa casera, placas troceadas, nata y mozzarella fundida (Las Recetas de Simón).",
+      "servingsYield": 4,
+      "prepTimeMinutes": 50,
+      "emoji": "🥘",
+      "tags": [
+        "Comida",
+        "Cena",
+        "Pasta",
+        "Rápido",
+        "Caliente"
+      ],
+      "ingredients": [
+        {
+          "id": "ing-ls-1",
+          "name": "Placas de lasaña",
+          "quantity": 200,
+          "unit": "g",
+          "category": "legumbres_cereales",
+          "optional": false
+        },
+        {
+          "id": "ing-ls-2",
+          "name": "Carne picada",
+          "quantity": 300,
+          "unit": "g",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-ls-3",
+          "name": "Cebolla morada",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-ls-4",
+          "name": "Zanahoria",
+          "quantity": 0.5,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-ls-5",
+          "name": "Ajo",
+          "quantity": 1,
+          "unit": "diente",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-ls-6",
+          "name": "Tomate",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-ls-7",
+          "name": "Tomate triturado",
+          "quantity": 400,
+          "unit": "g",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-ls-8",
+          "name": "Nata para cocinar",
+          "quantity": 100,
+          "unit": "ml",
+          "category": "lacteos_huevos",
+          "optional": false
+        },
+        {
+          "id": "ing-ls-9",
+          "name": "Mozzarella rallada",
+          "quantity": 150,
+          "unit": "g",
+          "category": "lacteos_huevos",
+          "optional": false
+        },
+        {
+          "id": "ing-ls-10",
+          "name": "Aceite de oliva virgen extra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-ls-11",
+          "name": "Pimienta negra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-ls-12",
+          "name": "Sal",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-ls-13",
+          "name": "Vino tinto",
+          "quantity": 100,
+          "unit": "ml",
+          "category": "conservas_aceites",
+          "optional": true
+        },
+        {
+          "id": "ing-ls-14",
+          "name": "Pimentón",
+          "quantity": 1,
+          "unit": "cucharadita",
+          "category": "especias_salsas",
+          "optional": true
+        },
+        {
+          "id": "ing-ls-15",
+          "name": "Queso parmesano rallado",
+          "quantity": 30,
+          "unit": "g",
+          "category": "lacteos_huevos",
+          "optional": true
+        },
+        {
+          "id": "ing-ls-16",
+          "name": "Perejil fresco",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "verduras_frutas",
+          "optional": true
+        }
+      ],
+      "steps": [
+        {
+          "id": "st-ls-1",
+          "text": "Picar muy chiquitas la cebolla morada y la media zanahoria y rehogarlas en una sartén amplia con aceite de oliva durante 5 minutos.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ls-1a",
+              "type": "tip",
+              "text": "Elige una sartén amplia, con algo de fondo y que tenga tapa, porque toda la receta se hará ahí mismo de principio a fin."
+            }
+          ]
+        },
+        {
+          "id": "st-ls-2",
+          "text": "Añadir el diente de ajo rallado y el tomate cortado en daditos y cocinar un par de minutos hasta que se integren.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ls-2a",
+              "type": "tip",
+              "text": "Rallar el ajo hace que se funda enseguida en el sofrito sin encontrar trozos grandes."
+            }
+          ]
+        },
+        {
+          "id": "st-ls-3",
+          "text": "Sumar la carne picada, salpimentar y condimentar al gusto (pimentón opcional). Añadir opcionalmente el chorrito de vino tinto, verter el tomate triturado (puré de tomate) y cocinar a fuego bajo unos 30 minutos para concentrar sabores.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ls-3a",
+              "type": "tip",
+              "text": "La lista escrita indica 300 g de carne picada, aunque en el vídeo usa hasta 500 g si la prefieres más contundente."
+            },
+            {
+              "id": "nt-ls-3b",
+              "type": "recordatorio",
+              "text": "Si tras los 30 minutos la salsa ha quedado muy espesa, aligérala con un chorrito de agua o más tomate antes de echar la pasta para que tenga líquido donde cocerse."
+            }
+          ]
+        },
+        {
+          "id": "st-ls-4",
+          "text": "Cortar las láminas de lasaña precocidas o frescas en trozos medianos, introducirlas directamente en la salsa caliente y cocinar unos 5 minutos hasta que empiecen a ablandar.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ls-4a",
+              "type": "recordatorio",
+              "text": "Usa pasta de lasaña precocida o fresca de supermercado y húndela repartida por distintos puntos para que las láminas no se peguen entre sí."
+            }
+          ]
+        },
+        {
+          "id": "st-ls-5",
+          "text": "Agregar los 100 ml de nata para cocinar (crema de leche) junto con un poco de queso rallado y mezclar suavemente con la pasta y la salsa.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ls-5a",
+              "type": "tip",
+              "text": "La nata ligada con el tomate hace las veces de bechamel exprés dejando el conjunto súper cremoso sin ensuciar otro cazo."
+            }
+          ]
+        },
+        {
+          "id": "st-ls-6",
+          "text": "Coronar por encima con la mozzarella rallada, tapar la sartén y cocinar a fuego mínimo unos minutos más hasta que la pasta esté tierna del todo y el queso completamente derretido.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ls-6a",
+              "type": "tip",
+              "text": "Opcionalmente, decora al destapar con perejil fresco picado por encima."
+            }
+          ]
+        }
+      ],
+      "recipeNotes": [
+        {
+          "id": "rn-ls-1",
+          "type": "tip",
+          "text": "Plato 'one-pot' salvavidas listo en menos de una hora sin horno y ensuciando únicamente una sartén."
+        },
+        {
+          "id": "rn-ls-2",
+          "type": "recordatorio",
+          "text": "Al recalentar en tupper añade una cucharada de leche, nata o agua antes de calentar porque las láminas siguen absorbiendo salsa en reposo."
+        },
+        {
+          "id": "rn-ls-3",
+          "type": "tip",
+          "text": "Post original (Las Recetas de Simón - Lasagna súper fácil en sartén): https://www.instagram.com/p/Cql5E9FDBSI/"
+        }
+      ],
+      "createdAt": "2026-11-24T15:00:00.000Z",
+      "updatedAt": "2026-11-24T15:00:00.000Z"
+    },
+    {
+      "id": "rec-mwut9948-zdxeb",
+      "name": "Cocido",
+      "description": "",
+      "servingsYield": 4,
+      "prepTimeMinutes": 180,
+      "emoji": "🍲",
+      "tags": [
+        "Comida",
+        "Saludable",
+        "Legumbres",
+        "Caliente"
+      ],
+      "ingredients": [
+        {
+          "id": "ing-mwut2jj2-1q48",
+          "name": "Tocino",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-mwut312x-dgi5",
+          "name": "Nabo",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-mwut36hh-w9b0",
+          "name": "Repollo",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-mwut3a3w-1bp3",
+          "name": "Zanahoria",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-mwut3ifl-t87r",
+          "name": "Apio",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": true
+        },
+        {
+          "id": "ing-mwut56ot-w82c",
+          "name": "Morcillo",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-mwut5aid-igdn",
+          "name": "Hueso de jamón",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-mwut6jxl-ny25",
+          "name": "Hueso de caña",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-mwut6vg7-uei6",
+          "name": "Cuarto trasero de pollo",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-mwut7jft-w5rl",
+          "name": "Chorizo",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-mwut8axr-8eub",
+          "name": "Espinazo",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-mwut95by-erv7",
+          "name": "Garbanzos",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        }
+      ],
+      "steps": [
+        {
+          "id": "step-mwut2jj2-chym",
+          "text": "Se pone todo crudo y sale todo cocido.",
+          "optional": false,
+          "notes": []
+        }
+      ],
+      "recipeNotes": [
+        {
+          "id": "rnote-mwuta81h-uzxu",
+          "type": "recordatorio",
+          "text": "El chorizo no se mete en la sopa, se frie aparte"
+        }
+      ],
+      "createdAt": "2026-11-24T14:49:30.728Z",
+      "updatedAt": "2026-11-24T14:50:35.344Z"
+    },
+    {
+      "id": "rec-harira-marroqui",
+      "name": "Harira marroquí",
+      "description": "Sopa tradicional marroquí reconfortante de cordero, lentejas, garbanzos, tomate especiado, hierbas frescas y fideos finos (receta de Jujumao Ep. 15).",
+      "servingsYield": 6,
+      "prepTimeMinutes": 70,
+      "emoji": "🥣",
+      "tags": [
+        "Comida",
+        "Cena",
+        "Legumbres",
+        "Caliente",
+        "Saludable"
+      ],
+      "ingredients": [
+        {
+          "id": "ing-hr-1",
+          "name": "Paletilla de cordero",
+          "quantity": 500,
+          "unit": "g",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-2",
+          "name": "Lentejas",
+          "quantity": 150,
+          "unit": "g",
+          "category": "legumbres_cereales",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-3",
+          "name": "Garbanzos cocidos",
+          "quantity": 150,
+          "unit": "g",
+          "category": "legumbres_cereales",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-4",
+          "name": "Fideos finos (cabellín)",
+          "quantity": 60,
+          "unit": "g",
+          "category": "legumbres_cereales",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-5",
+          "name": "Cebolla",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-6",
+          "name": "Ajo",
+          "quantity": 8,
+          "unit": "diente",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-7",
+          "name": "Apio",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-8",
+          "name": "Tomate triturado",
+          "quantity": 700,
+          "unit": "g",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-9",
+          "name": "Tomate concentrado",
+          "quantity": 3,
+          "unit": "cucharada",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-10",
+          "name": "Caldo de carne",
+          "quantity": 1.2,
+          "unit": "l",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-11",
+          "name": "Cilantro fresco",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-12",
+          "name": "Perejil fresco",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-13",
+          "name": "Harina de trigo",
+          "quantity": 2,
+          "unit": "cucharada",
+          "category": "legumbres_cereales",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-14",
+          "name": "Cúrcuma molida",
+          "quantity": 1,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-15",
+          "name": "Jengibre en polvo",
+          "quantity": 2,
+          "unit": "cucharadita",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-16",
+          "name": "Comino molido",
+          "quantity": 1,
+          "unit": "cucharadita",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-17",
+          "name": "Canela molida",
+          "quantity": 1,
+          "unit": "cucharadita",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-18",
+          "name": "Aceite de oliva virgen extra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-19",
+          "name": "Pimienta negra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-20",
+          "name": "Sal",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-hr-21",
+          "name": "Limón",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": true
+        }
+      ],
+      "steps": [
+        {
+          "id": "st-hr-1",
+          "text": "Cortar la paletilla de cordero en dados pequeños. Calentar aceite en una olla amplia, sellar la carne a fuego fuerte hasta que quede bien dorada y retirar reservándola aparte.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-hr-1a",
+              "type": "tip",
+              "text": "Dorar bien el cordero primero deja un fondo caramelizado en la olla que dará muchísimo sabor al caldo (también puedes sustituirlo por morcillo o aguja de ternera)."
+            },
+            {
+              "id": "nt-hr-1b",
+              "type": "recordatorio",
+              "text": "No amontones demasiada carne de golpe para que se selle en lugar de cocerse en su propio jugo."
+            }
+          ]
+        },
+        {
+          "id": "st-hr-2",
+          "text": "En esa misma olla, sofreír la cebolla y los dientes de ajo bien picados. Devolver el cordero reservado, añadir las 3 cucharadas de tomate concentrado y remover un par de minutos hasta impregnar todo.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-hr-2a",
+              "type": "tip",
+              "text": "Tostar el concentrado de tomate con el sofrito y la carne antes de mojar suaviza su acidez y aporta el color rojizo profundo típico de la Harira."
+            }
+          ]
+        },
+        {
+          "id": "st-hr-3",
+          "text": "Incorporar la rama de apio muy picada (incluidas sus hojas) junto con las especias (cúrcuma, jengibre, comino y canela) y rehogar brevemente removiendo.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-hr-3a",
+              "type": "tip",
+              "text": "Aprovecha también las hojas del apio bien picadas como en el vídeo: aportan gran parte del aroma fresco característico de esta sopa."
+            },
+            {
+              "id": "nt-hr-3b",
+              "type": "recordatorio",
+              "text": "Remueve sin parar unos segundos al echar las especias para que suelten aroma sin quemarse."
+            }
+          ]
+        },
+        {
+          "id": "st-hr-4",
+          "text": "Añadir las lentejas lavadas, los garbanzos, el tomate triturado (passata) y el caldo de carne hasta llenar la olla. Tapar y cocer a fuego suave unos 40 minutos hasta que las lentejas y el cordero estén tiernos.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-hr-4a",
+              "type": "tip",
+              "text": "Si usas garbanzos de bote ya muy tiernos, puedes añadirlos en los últimos 15-20 minutos de cocción para que queden enteros."
+            }
+          ]
+        },
+        {
+          "id": "st-hr-5",
+          "text": "Romper los fideos finos con las manos sobre la olla e incorporarlos junto con el cilantro y el perejil frescos bien picados. Salpimentar al gusto y cocinar unos 15 minutos más.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-hr-5a",
+              "type": "tip",
+              "text": "Reserva un par de cucharadas del cilantro y perejil picados en crudo para hacer la corona verde al emplatar."
+            }
+          ]
+        },
+        {
+          "id": "st-hr-6",
+          "text": "Disolver la harina en unos 100 ml de agua fría batiendo sin grumos (tedouira). Verter en hilo fino sin dejar de remover y hervir suave 5 minutos hasta espesar ligeramente la sopa.",
+          "optional": true,
+          "notes": [
+            {
+              "id": "nt-hr-6a",
+              "type": "recordatorio",
+              "text": "Mezcla siempre la harina con agua fría en un bol aparte antes de verterla; si la echas directamente al caldo caliente se harán grumos."
+            }
+          ]
+        },
+        {
+          "id": "st-hr-7",
+          "text": "Servir bien caliente decorando con el cilantro y perejil frescos reservados por el borde, gajos de limón en el centro y un chorrito de zumo de limón recién exprimido.",
+          "optional": true,
+          "notes": [
+            {
+              "id": "nt-hr-7a",
+              "type": "tip",
+              "text": "El chorrito de limón justo antes de comer realza todas las especias cálidas (canela, comino y cúrcuma) y aligera el conjunto."
+            }
+          ]
+        }
+      ],
+      "recipeNotes": [
+        {
+          "id": "rn-hr-1",
+          "type": "tip",
+          "text": "Ideal para batch cooking: reposada de un día para otro los sabores se asientan y está todavía más reconfortante."
+        },
+        {
+          "id": "rn-hr-2",
+          "type": "recordatorio",
+          "text": "Al enfriarse en nevera espesa bastante por los fideos y la harina; al recalentar añade un chorrito de agua o caldo para devolverle la textura sedosa."
+        },
+        {
+          "id": "rn-hr-3",
+          "type": "tip",
+          "text": "Vídeo de referencia (Jujumao - Moroccan Harira Ep. 15): https://www.youtube.com/shorts/1uGemyzptL4"
+        }
+      ],
+      "createdAt": "2026-11-24T14:04:00.000Z",
+      "updatedAt": "2026-11-24T14:14:49.007Z"
+    },
+    {
+      "id": "rec-macarrones-supervivencia",
+      "name": "Macarrones de supervivencia",
+      "description": "Macarrones caseros con ragú jugoso de carne, tomate natural y leche al estilo Jordi Cruz; pensados para cocinar un buen lote, guardar en tuppers o gratinar.",
+      "servingsYield": 8,
+      "prepTimeMinutes": 90,
+      "emoji": "🍝",
+      "tags": [
+        "Comida",
+        "Pasta",
+        "Caliente"
+      ],
+      "ingredients": [
+        {
+          "id": "ing-ms-1",
+          "name": "Macarrones",
+          "quantity": 1,
+          "unit": "kg",
+          "category": "legumbres_cereales",
+          "optional": false
+        },
+        {
+          "id": "ing-ms-2",
+          "name": "Carne picada",
+          "quantity": 1.5,
+          "unit": "kg",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "ing-ms-3",
+          "name": "Cebolla morada",
+          "quantity": 500,
+          "unit": "g",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-ms-4",
+          "name": "Ajo",
+          "quantity": 3,
+          "unit": "diente",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-ms-5",
+          "name": "Tomate triturado",
+          "quantity": 1,
+          "unit": "kg",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-ms-6",
+          "name": "Leche",
+          "quantity": 500,
+          "unit": "ml",
+          "category": "lacteos_huevos",
+          "optional": true
+        },
+        {
+          "id": "ing-ms-7",
+          "name": "Orégano",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-ms-8",
+          "name": "Pimienta negra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-ms-9",
+          "name": "Aceite de oliva virgen extra",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "conservas_aceites",
+          "optional": false
+        },
+        {
+          "id": "ing-ms-10",
+          "name": "Sal",
+          "quantity": 0,
+          "unit": "al_gusto",
+          "category": "especias_salsas",
+          "optional": false
+        },
+        {
+          "id": "ing-ms-11",
+          "name": "Mozzarella rallada",
+          "quantity": 150,
+          "unit": "g",
+          "category": "lacteos_huevos",
+          "optional": true
+        },
+        {
+          "id": "ing-ms-12",
+          "name": "Queso parmesano rallado",
+          "quantity": 80,
+          "unit": "g",
+          "category": "lacteos_huevos",
+          "optional": true
+        },
+        {
+          "id": "ing-ms-13",
+          "name": "Hoja de laurel",
+          "quantity": 2,
+          "unit": "ud",
+          "category": "especias_salsas",
+          "optional": true
+        },
+        {
+          "id": "ing-ms-14",
+          "name": "Demi-glace o pastilla de caldo",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "especias_salsas",
+          "optional": true
+        },
+        {
+          "id": "ing-ms-15",
+          "name": "Gochujang o picante",
+          "quantity": 1,
+          "unit": "cucharadita",
+          "category": "especias_salsas",
+          "optional": true
+        },
+        {
+          "id": "ing-ms-16",
+          "name": "Bicarbonato",
+          "quantity": 0.5,
+          "unit": "cucharadita",
+          "category": "especias_salsas",
+          "optional": true
+        },
+        {
+          "id": "ing-mwutc1fd-6io4",
+          "name": "Caldo de carne",
+          "quantity": 1,
+          "unit": "l",
+          "category": "conservas_aceites",
+          "optional": true
+        }
+      ],
+      "steps": [
+        {
+          "id": "st-ms-1",
+          "text": "Pochar la cebolla picada a fuego vivo con el aceite justo y una pizca de sal; cuando empiece a dorarse, añadir el ajo picado, rehogar y terminar a fuego mínimo tapado.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ms-1a",
+              "type": "recordatorio",
+              "text": "No echar el ajo desde el principio si la cebolla es seca: el ajo tiene más azúcares y se quema antes (solo irían a la vez con cebolla tierna)."
+            },
+            {
+              "id": "nt-ms-1b",
+              "type": "tip",
+              "text": "Truco para acelerar el pochado sin quemarlo: tras el primer dorado en seco, añade 100 ml de agua fría y tapa 5-10 min al mínimo para hacer cocción al vapor."
+            },
+            {
+              "id": "nt-ms-1c",
+              "type": "tip",
+              "text": "Media cucharadita de bicarbonato ayuda a ablandar antes la cebolla y neutraliza la acidez del tomate mejor que el azúcar."
+            },
+            {
+              "id": "nt-ms-1d",
+              "type": "tip",
+              "text": "También puedes repartir los 500 g de hortaliza a partes iguales entre cebolla, zanahoria y apio."
+            }
+          ]
+        },
+        {
+          "id": "st-ms-2",
+          "text": "Subir el fuego al máximo, incorporar la carne picada desmenuzada y cocinar unos 8-10 minutos mezclando bien hasta que pierda toda el agua y empiece a dorarse.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ms-2a",
+              "type": "tip",
+              "text": "No hace falta que la cebolla esté pochada al 100 % antes de echar la carne: terminará de hacerse mientras la carne suelta el agua y dora."
+            },
+            {
+              "id": "nt-ms-2b",
+              "type": "tip",
+              "text": "Vale ternera 100 %, mezcla ternera-cerdo o incluso hamburguesas frescas (no maduradas) aireadas antes con las manos. Una mano de mortero ayuda a deshacer las bolitas en la cazuela."
+            },
+            {
+              "id": "nt-ms-2c",
+              "type": "recordatorio",
+              "text": "Estará en su punto cuando evapore el jugo y empiece a sonar un ligero chisporroteo (\"cric-cric\")."
+            }
+          ]
+        },
+        {
+          "id": "st-ms-3",
+          "text": "Salpimentar, añadir el orégano y el tomate natural triturado. Cuando empiece el \"chup-chup\", bajar a fuego suave y guisar tapado unos 45 minutos.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ms-3a",
+              "type": "recordatorio",
+              "text": "Usar siempre pulpa de tomate o conserva natural triturada/pelada de buena calidad, nunca tomate frito (con tanta cocción se desnaturaliza)."
+            },
+            {
+              "id": "nt-ms-3b",
+              "type": "recordatorio",
+              "text": "Ir rectificando la sal poco a poco en cada fase para equilibrar la carne y el tomate, en lugar de salar de golpe al final."
+            },
+            {
+              "id": "nt-ms-3c",
+              "type": "tip",
+              "text": "Aquí puedes sumar un cubito de demi-glace (o caldo concentrado) y un fondo muy sutil de picante (gochujang, cayena o tabasco) para potenciar el sabor."
+            }
+          ]
+        },
+        {
+          "id": "st-ms-4",
+          "text": "Incorporar los 500 ml de leche, rectificar de sal y especias y cocinar a fuego suave 10-15 minutos más hasta lograr una salsa cremosa y unificada.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ms-4a",
+              "type": "tip",
+              "text": "La leche da fluidez al ragú y un punto láctico suave ideal para macarrones (también se puede sustituir por caldo)."
+            }
+          ]
+        },
+        {
+          "id": "st-ms-5",
+          "text": "Cocer los macarrones en abundante agua hirviendo con sal (y laurel opcional) durante 2-3 minutos menos de lo que indique el fabricante. Escurrir reservando un poco de agua de cocción y mezclar bien con el ragú.",
+          "optional": false,
+          "notes": [
+            {
+              "id": "nt-ms-5a",
+              "type": "recordatorio",
+              "text": "Guardar un vaso del agua de cocción antes de colar la pasta por si hace falta aligerar la salsa al mezclar."
+            },
+            {
+              "id": "nt-ms-5b",
+              "type": "recordatorio",
+              "text": "No echar aceite al agua de cocción para que la salsa no resbale de la pasta. Añadir la sal (aprox. 15 g por litro de agua) cuando ya hierva."
+            },
+            {
+              "id": "nt-ms-5c",
+              "type": "tip",
+              "text": "Al sacar la pasta 2-3 minutos antes (ej. 8-9 min si marca 11), termina de cocerse absorbiendo todo el sabor dentro de la propia salsa."
+            }
+          ]
+        },
+        {
+          "id": "st-ms-6",
+          "text": "Pasar a una fuente de horno, retirar el laurel, cubrir con mozzarella y parmesano rallados y gratinar 5-7 minutos con el grill bien caliente hasta dorar.",
+          "optional": true,
+          "notes": [
+            {
+              "id": "nt-ms-6a",
+              "type": "tip",
+              "text": "Poner una pizca de parmesano en el fondo del plato al emplatar hace que el calor suba todo su aroma."
+            }
+          ]
+        }
+      ],
+      "recipeNotes": [
+        {
+          "id": "rn-ms-1",
+          "type": "tip",
+          "text": "Salen unos 2 kg de macarrones terminados (8-10 raciones): reposados de un día para otro están aún más ricos, aguantan genial en tuppers y admiten congelación."
+        },
+        {
+          "id": "rn-ms-2",
+          "type": "tip",
+          "text": "Poner siempre la grasa justa desde el principio e ir ajustando sobre la marcha para no tener que desgrasar al final."
+        },
+        {
+          "id": "rn-ms-3",
+          "type": "tip",
+          "text": "Vídeo de referencia (Jordi Cruz - Macarrones de supervivencia): https://www.youtube.com/watch?v=nMnR1Rjh_B0"
+        }
+      ],
+      "createdAt": "2026-11-24T13:45:00.000Z",
+      "updatedAt": "2026-11-24T14:52:08.698Z"
+    },
+    {
+      "id": "rec-mwup10va-p1tdm",
+      "name": "Lentejas",
+      "description": "",
+      "servingsYield": 4,
+      "prepTimeMinutes": 30,
+      "emoji": "🍲",
+      "tags": [
+        "Comida",
+        "Legumbres",
+        "Caliente",
+        "Saludable",
+        "Vegetariano"
+      ],
+      "ingredients": [
+        {
+          "id": "tmp-mwuoha8m-f6rz",
+          "name": "Zanahoria",
+          "quantity": 2,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "tmp-mwuoj1n4-ykwi",
+          "name": "Chorizo",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "carnes_pescados",
+          "optional": false
+        },
+        {
+          "id": "tmp-mwuojdof-0mm3",
+          "name": "Lentejas",
+          "quantity": 350,
+          "unit": "g",
+          "category": "legumbres_cereales",
+          "optional": false
+        },
+        {
+          "id": "tmp-mwuolgck-eur4",
+          "name": "Apio",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "tmp-mwuopg7z-pkgr",
+          "name": "Pimiento",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "verduras_frutas",
+          "optional": false
+        },
+        {
+          "id": "ing-mwuqfc35-ylbr",
+          "name": "Ajo",
+          "quantity": 5,
+          "unit": "diente",
+          "category": "verduras_frutas",
+          "optional": true
+        },
+        {
+          "id": "ing-mwuqfl0f-a9us",
+          "name": "Pimentón",
+          "quantity": 1,
+          "unit": "cucharada",
+          "category": "especias_salsas",
+          "optional": true
+        },
+        {
+          "id": "ing-mwuqkgvh-4nst",
+          "name": "Cayena",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "especias_salsas",
+          "optional": true
+        }
+      ],
+      "steps": [
+        {
+          "id": "rec-mwup10va-p1tdm-step-1",
+          "text": "Todos los ingredientes en la olla y dejar cocer hasta que la lenteja esté hecha",
+          "optional": false,
+          "notes": [
+            {
+              "id": "snote-mwuqjgg0-e3eu",
+              "type": "recordatorio",
+              "text": "La lenteja se cuece desde agua fría"
+            },
+            {
+              "id": "snote-mwuqjs5x-coun",
+              "type": "tip",
+              "text": "Si no lleva chorizo se le puede echar aquí una cucharadita de aceite"
+            }
+          ]
+        },
+        {
+          "id": "rec-mwup10va-p1tdm-step-2",
+          "text": "Sacar la verduras y triturarlas",
+          "optional": false,
+          "notes": [
+            {
+              "id": "snote-mwuqj1gm-176c",
+              "type": "tip",
+              "text": "No triturar el apio"
+            }
+          ]
+        },
+        {
+          "id": "rec-mwup10va-p1tdm-step-3",
+          "text": "Hacer un refrito de ajo y cayena y pimentón.",
+          "optional": true,
+          "notes": [
+            {
+              "id": "snote-mwuqh83o-fi9q",
+              "type": "recordatorio",
+              "text": "Hacerlo desde aceite en frío."
+            },
+            {
+              "id": "snote-mwuqhwow-b6e6",
+              "type": "tip",
+              "text": "Añadir el pimentón cuando los ajos ya suelten el centro y estén bailando"
+            },
+            {
+              "id": "snote-mwuqmohx-xkpy",
+              "type": "tip",
+              "text": "Al final se le puede echar un chorrito de vinagre o liquido de piparras"
+            }
+          ]
+        }
+      ],
+      "recipeNotes": [
+        {
+          "id": "rec-mwup10va-p1tdm-rnote-legacy",
+          "type": "recordatorio",
+          "text": "No añadir sal al principio"
+        }
+      ],
+      "createdAt": "2026-11-24T12:51:08.325Z",
+      "updatedAt": "2026-11-24T14:15:23.251Z"
+    }
+  ],
+  "weekPlans": {
+    "2026-11-23": {
+      "weekStart": "2026-11-23",
+      "entries": [],
+      "batchOverrides": {},
+      "checkedShoppingKeys": [],
+      "addedToPantryKeys": [
+        "extra::ext-mwum3jct-ck8w5"
+      ],
+      "extraShoppingItems": [
+        {
+          "id": "ext-mwum3jct-ck8w5",
+          "name": "Champú",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "otros",
+          "checked": true
+        },
+        {
+          "id": "ext-mwutzjv6-bqbny",
+          "name": "Café",
+          "quantity": 1,
+          "unit": "ud",
+          "category": "otros",
+          "checked": false
+        },
+        {
+          "id": "ext-mwutzqsr-p5vs9",
+          "name": "Tomates",
+          "quantity": 1,
+          "unit": "kg",
+          "category": "verduras_frutas",
+          "checked": false
+        },
+        {
+          "id": "ext-mwv98tpa-vwcp0",
+          "name": "Orégano",
+          "quantity": 1,
+          "unit": "lata",
+          "category": "especias_salsas",
+          "checked": false
+        }
+      ]
+    }
+  },
+  "pantry": [
+    {
+      "id": "pan-mwv9av9f-mrgmq",
+      "name": "Gochujang",
+      "quantity": 100,
+      "unit": "g",
+      "category": "especias_salsas",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:18:39.939Z"
+    },
+    {
+      "id": "pan-mwv9a3d3-0g3ul",
+      "name": "Leche",
+      "quantity": 5,
+      "unit": "l",
+      "category": "lacteos_huevos",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:18:03.783Z"
+    },
+    {
+      "id": "pan-mwv99p86-4itfu",
+      "name": "Ajo",
+      "quantity": 15,
+      "unit": "diente",
+      "category": "verduras_frutas",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:17:45.462Z"
+    },
+    {
+      "id": "pan-mwv99d6m-6di8i",
+      "name": "Macarrones",
+      "quantity": 100,
+      "unit": "g",
+      "category": "legumbres_cereales",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:17:29.854Z"
+    },
+    {
+      "id": "pan-mwv989gw-t8mbk",
+      "name": "Ajo en polvo",
+      "quantity": 50,
+      "unit": "g",
+      "category": "especias_salsas",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:16:38.383Z"
+    },
+    {
+      "id": "pan-mwv980cv-ogujs",
+      "name": "Comino",
+      "quantity": 50,
+      "unit": "g",
+      "category": "especias_salsas",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:16:26.575Z"
+    },
+    {
+      "id": "pan-mwv97tew-0e35u",
+      "name": "Salsa de soja",
+      "quantity": 200,
+      "unit": "ml",
+      "category": "especias_salsas",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:16:17.576Z"
+    },
+    {
+      "id": "pan-mwv979qi-6s26t",
+      "name": "Huevos",
+      "quantity": 22,
+      "unit": "ud",
+      "category": "lacteos_huevos",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:15:52.074Z"
+    },
+    {
+      "id": "pan-mwv971g1-h1s38",
+      "name": "Atún",
+      "quantity": 4,
+      "unit": "ud",
+      "category": "conservas_aceites",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:15:41.328Z"
+    },
+    {
+      "id": "pan-mwv9658z-4qfqm",
+      "name": "Aguacate",
+      "quantity": 2,
+      "unit": "ud",
+      "category": "verduras_frutas",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:14:59.603Z"
+    },
+    {
+      "id": "pan-mwv95xru-vm2xm",
+      "name": "Arroz",
+      "quantity": 100,
+      "unit": "g",
+      "category": "legumbres_cereales",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:14:49.914Z"
+    },
+    {
+      "id": "pan-mwv94f7b-ef671",
+      "name": "Apio",
+      "quantity": 5,
+      "unit": "ud",
+      "category": "verduras_frutas",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:13:39.191Z"
+    },
+    {
+      "id": "pan-mwv93h5p-p7qea",
+      "name": "Garbanzos",
+      "quantity": 1.5,
+      "unit": "lata",
+      "category": "legumbres_cereales",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:12:55.068Z"
+    },
+    {
+      "id": "pan-mwutyz2a-o0hzy",
+      "name": "Champú",
+      "quantity": 1,
+      "unit": "lata",
+      "category": "otros",
+      "alwaysAvailable": false,
+      "updatedAt": "2026-11-24T22:13:09.254Z"
+    }
+  ],
+  "settings": {
+    "enabledSlots": [
+      "comida"
+    ],
+    "defaultServingsPerMeal": 2,
+    "deductPantryInShopping": true,
+    "includeOptionalInShopping": true
+  }
+}
