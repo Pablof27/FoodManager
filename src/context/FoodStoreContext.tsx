@@ -12,6 +12,7 @@ import {
   computeWeekRecipeSummaries,
   computeWeekShoppingList,
   createEmptyWeekPlan,
+  getSuggestedPantryRestock,
 } from '../lib/plannerEngine'
 import { getSupabaseClient } from '../lib/supabase'
 import {
@@ -32,6 +33,7 @@ import {
   applyRelationalDiffToSupabase,
   computeRelationalSyncDiff,
   fetchUserCloudSnapshot,
+  formatSupabaseError,
   replaceAllUserCloudData,
 } from '../storage/supabaseSync'
 import {
@@ -137,9 +139,10 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
         if (remote.hasCloudData) {
           resolvedSnapshot = remote.snapshot
         } else {
-          // Cuenta recién estrenada en Supabase: inicializamos con sus datos locales actuales
-          resolvedSnapshot = await loadAppSnapshot()
-          await replaceAllUserCloudData(client, activeUserId, resolvedSnapshot)
+          // Cuenta sin datos en Supabase: inicializamos con su caché previa o con los datos locales actuales
+          resolvedSnapshot =
+            (await loadUserCachedSnapshot(activeUserId)) ?? (await loadAppSnapshot())
+          await replaceAllUserCloudData(client, activeUserId, resolvedSnapshot, null)
         }
 
         if (!mounted) return
@@ -154,16 +157,17 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
         setHydratedScope(targetScope)
       } catch (err: unknown) {
         if (!mounted) return
-        const message =
-          err instanceof Error
-            ? err.message
-            : 'No se pudo conectar con Supabase. Mostrando caché local.'
-        const cached = (await loadUserCachedSnapshot(activeUserId)) ?? createSeedSnapshot()
+        const message = formatSupabaseError(
+          err,
+          'No se pudo conectar con Supabase. Mostrando copia local.',
+        )
+        const fallbackSnapshot =
+          (await loadUserCachedSnapshot(activeUserId)) ?? (await loadAppSnapshot())
         if (!mounted) return
         lastSyncedCloudRef.current = null
-        lastLoadedRef.current = cached
+        lastLoadedRef.current = fallbackSnapshot
         hydratedScopeRef.current = targetScope
-        setSnapshot(cached)
+        setSnapshot(fallbackSnapshot)
         setCloudSyncStatus('error')
         setCloudSyncError(message)
         setHydratedScope(targetScope)
@@ -205,7 +209,7 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
           hasPendingCloudWriteRef.current = false
           setCloudSyncStatus('error')
           setCloudSyncError(
-            err instanceof Error ? err.message : 'Error guardando cambios en Supabase.',
+            formatSupabaseError(err, 'Error guardando cambios en Supabase.'),
           )
         })
     },
@@ -239,15 +243,15 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
     }
   }, [snapshot, isHydrated, targetScope, activeUserId, pushLatestToCloud])
 
-  const refreshFromCloud = useCallback(async () => {
-    if (!activeUserId) return
+  const refreshFromCloud = useCallback(async (): Promise<boolean> => {
+    if (!activeUserId) return false
     const client = getSupabaseClient()
-    if (!client) return
+    if (!client) return false
 
     if (hasPendingCloudWriteRef.current) {
       pushLatestToCloud(activeUserId, latestSnapshotRef.current)
       await syncChainRef.current
-      return
+      return lastSyncedCloudRef.current !== null
     }
 
     setCloudSyncStatus('syncing')
@@ -261,14 +265,25 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
           lastLoadedRef.current = remote.snapshot
           setSnapshot(remote.snapshot)
         }
+      } else {
+        // Las tablas del usuario están vacías (p. ej. tras aplicar permisos en schema.sql):
+        // subimos el estado local actual para poblar su cuenta en la nube.
+        const initialSnapshot = latestSnapshotRef.current
+        await replaceAllUserCloudData(client, activeUserId, initialSnapshot, null)
+        await saveUserCachedSnapshot(activeUserId, initialSnapshot)
+        lastSyncedCloudRef.current = initialSnapshot
+        lastLocalPushEndedAtRef.current = Date.now()
       }
       setCloudSyncStatus('synced')
+      setCloudSyncError(null)
       setLastSyncedAt(new Date().toISOString())
+      return true
     } catch (err: unknown) {
       setCloudSyncStatus('error')
       setCloudSyncError(
-        err instanceof Error ? err.message : 'Error sincronizando datos desde Supabase.',
+        formatSupabaseError(err, 'Error sincronizando datos desde Supabase.'),
       )
+      return false
     }
   }, [activeUserId, pushLatestToCloud])
 
@@ -339,10 +354,49 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
     }
   }, [activeUserId, isHydrated, refreshFromCloud])
 
-  const importLocalGuestDataToCloud = useCallback(async () => {
+  const importLocalGuestDataToCloud = useCallback(async (): Promise<boolean> => {
     const localGuestSnapshot = await loadAppSnapshot()
+    lastLoadedRef.current = localGuestSnapshot
+    latestSnapshotRef.current = localGuestSnapshot
     setSnapshot(localGuestSnapshot)
-  }, [])
+
+    if (!activeUserId) {
+      await saveAppSnapshot(localGuestSnapshot)
+      return true
+    }
+
+    const client = getSupabaseClient()
+    if (!client) return false
+
+    await saveUserCachedSnapshot(activeUserId, localGuestSnapshot)
+    hasPendingCloudWriteRef.current = true
+    setCloudSyncStatus('syncing')
+    setCloudSyncError(null)
+
+    let succeeded = false
+    syncChainRef.current = syncChainRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        await replaceAllUserCloudData(client, activeUserId, localGuestSnapshot)
+        lastSyncedCloudRef.current = localGuestSnapshot
+        lastLocalPushEndedAtRef.current = Date.now()
+        hasPendingCloudWriteRef.current = false
+        setCloudSyncStatus('synced')
+        setCloudSyncError(null)
+        setLastSyncedAt(new Date().toISOString())
+        succeeded = true
+      })
+      .catch((err: unknown) => {
+        hasPendingCloudWriteRef.current = false
+        setCloudSyncStatus('error')
+        setCloudSyncError(
+          formatSupabaseError(err, 'Error copiando datos locales a Supabase.'),
+        )
+      })
+
+    await syncChainRef.current
+    return succeeded
+  }, [activeUserId])
 
   const currentWeekPlan = useMemo<WeekPlan>(() => {
     return snapshot.weekPlans[activeWeekStart] ?? createEmptyWeekPlan(activeWeekStart)
@@ -452,7 +506,11 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
         prepTimeMinutes: original.prepTimeMinutes,
         emoji: original.emoji,
         tags: [...original.tags],
-        ingredients: original.ingredients.map((ing) => ({ ...ing, id: makeId('ing') })),
+        ingredients: original.ingredients.map((ing) => ({
+          ...ing,
+          id: makeId('ing'),
+          ...(ing.substitutes ? { substitutes: [...ing.substitutes] } : {}),
+        })),
         steps: original.steps.map((st) => ({
           ...st,
           id: makeId('step'),
@@ -617,20 +675,141 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
     (input: { name: string; quantity: number; unit: Unit; category: IngredientCategory }) => {
       const trimmed = input.name.trim()
       if (!trimmed) return
-      const item: ExtraShoppingItem = {
-        id: makeId('ext'),
-        name: trimmed,
-        quantity: input.unit === 'al_gusto' ? 0 : Math.max(0.1, roundClean(input.quantity || 1)),
-        unit: input.unit,
-        category: input.category,
-        checked: false,
-      }
-      updateCurrentWeek((plan) => ({
-        ...plan,
-        extraShoppingItems: [...plan.extraShoppingItems, item],
-      }))
+      const safeQty = input.unit === 'al_gusto' ? 0 : Math.max(0.1, roundClean(input.quantity || 1))
+      const norm = normalizeIngredientKey(trimmed)
+      const fam = getUnitFamily(input.unit)
+
+      updateCurrentWeek((plan) => {
+        const existingIdx = plan.extraShoppingItems.findIndex(
+          (ext) =>
+            !ext.checked &&
+            normalizeIngredientKey(ext.name) === norm &&
+            getUnitFamily(ext.unit) === fam,
+        )
+
+        if (existingIdx >= 0) {
+          const existing = plan.extraShoppingItems[existingIdx]
+          const addedBase = toBaseQuantity(safeQty, input.unit)
+          const merged = mergeBaseIntoUnit(existing.quantity, existing.unit, addedBase)
+          const nextExtras = [...plan.extraShoppingItems]
+          nextExtras[existingIdx] = {
+            ...existing,
+            quantity: merged.quantity,
+            unit: merged.unit,
+          }
+          return { ...plan, extraShoppingItems: nextExtras }
+        }
+
+        const item: ExtraShoppingItem = {
+          id: makeId('ext'),
+          name: trimmed,
+          quantity: safeQty,
+          unit: input.unit,
+          category: input.category,
+          checked: false,
+        }
+        return {
+          ...plan,
+          extraShoppingItems: [...plan.extraShoppingItems, item],
+        }
+      })
     },
     [updateCurrentWeek],
+  )
+
+  const updateExtraShoppingItemQuantity = useCallback(
+    (id: string, quantity: number) => {
+      updateCurrentWeek((plan) => {
+        const target = plan.extraShoppingItems.find((item) => item.id === id)
+        if (!target) return plan
+        if (target.unit !== 'al_gusto' && quantity <= 0) {
+          return {
+            ...plan,
+            extraShoppingItems: plan.extraShoppingItems.filter((item) => item.id !== id),
+          }
+        }
+        return {
+          ...plan,
+          extraShoppingItems: plan.extraShoppingItems.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  quantity: item.unit === 'al_gusto' ? 0 : roundClean(quantity),
+                }
+              : item,
+          ),
+        }
+      })
+    },
+    [updateCurrentWeek],
+  )
+
+  const addPantryItemsToShopping = useCallback(
+    (items: PantryItem[]): number => {
+      if (items.length === 0) return 0
+      const autoToBuyNorms = new Set(
+        weekShopping.toBuyItems.filter((i) => !i.checked).map((i) => i.normalizedName),
+      )
+
+      let addedCount = 0
+      updateCurrentWeek((plan) => {
+        const nextExtras = [...plan.extraShoppingItems]
+
+        for (const pItem of items) {
+          const trimmed = pItem.name.trim()
+          const norm = normalizeIngredientKey(trimmed)
+          if (!norm) continue
+
+          const suggested = getSuggestedPantryRestock(pItem)
+          const fam = getUnitFamily(suggested.unit)
+
+          const existingUncheckedIdx = nextExtras.findIndex(
+            (ext) =>
+              !ext.checked &&
+              normalizeIngredientKey(ext.name) === norm &&
+              getUnitFamily(ext.unit) === fam,
+          )
+
+          // En reposición múltiple omitimos los que ya están pendientes en la cesta;
+          // en adición individual (items.length === 1) sumamos otro lote sugerido si ya estaba
+          if (items.length > 1) {
+            const anyUnchecked = nextExtras.some(
+              (ext) => !ext.checked && normalizeIngredientKey(ext.name) === norm,
+            )
+            if (anyUnchecked || autoToBuyNorms.has(norm)) {
+              continue
+            }
+          }
+
+          if (existingUncheckedIdx >= 0) {
+            const existing = nextExtras[existingUncheckedIdx]
+            const addedBase = toBaseQuantity(suggested.quantity, suggested.unit)
+            const merged = mergeBaseIntoUnit(existing.quantity, existing.unit, addedBase)
+            nextExtras[existingUncheckedIdx] = {
+              ...existing,
+              quantity: merged.quantity,
+              unit: merged.unit,
+            }
+            addedCount += 1
+          } else {
+            nextExtras.push({
+              id: makeId('ext'),
+              name: trimmed,
+              quantity: suggested.quantity,
+              unit: suggested.unit,
+              category: pItem.category,
+              checked: false,
+            })
+            addedCount += 1
+          }
+        }
+
+        return addedCount > 0 ? { ...plan, extraShoppingItems: nextExtras } : plan
+      })
+
+      return addedCount
+    },
+    [updateCurrentWeek, weekShopping.toBuyItems],
   )
 
   const toggleExtraShoppingItem = useCallback(
@@ -704,16 +883,26 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
             updatedAt: nowIso,
           }
         } else {
-          const baseConverted = mergeBaseIntoUnit(0, unit, addedBaseQty)
-          nextPantry.unshift({
-            id: makeId('pan'),
-            name: displayName,
-            quantity: baseConverted.quantity,
-            unit: baseConverted.unit,
-            category,
-            alwaysAvailable: unit === 'al_gusto',
-            updatedAt: nowIso,
-          })
+          const basicIdx = nextPantry.findIndex(
+            (p) => normalizeIngredientKey(p.name) === norm && Boolean(p.alwaysAvailable),
+          )
+          if (basicIdx >= 0) {
+            nextPantry[basicIdx] = {
+              ...nextPantry[basicIdx],
+              updatedAt: nowIso,
+            }
+          } else {
+            const baseConverted = mergeBaseIntoUnit(0, unit, addedBaseQty)
+            nextPantry.unshift({
+              id: makeId('pan'),
+              name: displayName,
+              quantity: baseConverted.quantity,
+              unit: baseConverted.unit,
+              category,
+              alwaysAvailable: unit === 'al_gusto',
+              updatedAt: nowIso,
+            })
+          }
         }
       }
 
@@ -888,9 +1077,19 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
     }
     for (const r of snapshot.recipes) {
       for (const ing of r.ingredients) {
-        const key = normalizeIngredientKey(ing.name)
-        if (key && !map.has(key)) {
-          map.set(key, { name: ing.name, unit: ing.unit, category: ing.category })
+        if (!ing.genericGroup) {
+          const key = normalizeIngredientKey(ing.name)
+          if (key && !map.has(key)) {
+            map.set(key, { name: ing.name, unit: ing.unit, category: ing.category })
+          }
+        }
+        if (ing.substitutes) {
+          for (const sub of ing.substitutes) {
+            const subKey = normalizeIngredientKey(sub)
+            if (subKey && !map.has(subKey)) {
+              map.set(subKey, { name: sub, unit: ing.unit, category: ing.category })
+            }
+          }
         }
       }
     }
@@ -952,6 +1151,8 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
       clearCurrentWeek,
       toggleShoppingItemChecked,
       addExtraShoppingItem,
+      updateExtraShoppingItemQuantity,
+      addPantryItemsToShopping,
       toggleExtraShoppingItem,
       removeExtraShoppingItem,
       clearCheckedExtraItems,
@@ -994,6 +1195,8 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
       clearCurrentWeek,
       toggleShoppingItemChecked,
       addExtraShoppingItem,
+      updateExtraShoppingItemQuantity,
+      addPantryItemsToShopping,
       toggleExtraShoppingItem,
       removeExtraShoppingItem,
       clearCheckedExtraItems,

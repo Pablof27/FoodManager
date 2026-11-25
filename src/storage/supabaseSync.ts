@@ -78,22 +78,120 @@ export interface RelationalSyncDiff {
   hasChanges: boolean
 }
 
-export function recipeToDbRow(userId: string, recipe: Recipe, position: number): DbRecipeRow {
+export class SupabaseSyncError extends Error {
+  readonly code?: string
+  readonly hint?: string
+
+  constructor(message: string, opts?: { code?: string; hint?: string }) {
+    super(message)
+    this.name = 'SupabaseSyncError'
+    this.code = opts?.code
+    this.hint = opts?.hint
+  }
+}
+
+function asNonEmptyString(val: unknown): string | undefined {
+  return typeof val === 'string' && val.trim().length > 0 ? val.trim() : undefined
+}
+
+function ensureValidIsoTimestamp(val: unknown, fallbackIso: string): string {
+  if (typeof val === 'string' && val.trim().length > 0 && !Number.isNaN(Date.parse(val))) {
+    return val
+  }
+  return fallbackIso
+}
+
+/**
+ * Convierte errores de PostgREST / Supabase (que suelen ser objetos planos `{ message, code, details, hint }`
+ * y no instancias de `Error`) en un mensaje claro y accionable para el usuario.
+ */
+export function formatSupabaseError(
+  err: unknown,
+  fallbackMessage = 'No se pudo conectar con Supabase.',
+): string {
+  if (err instanceof SupabaseSyncError) {
+    return err.message
+  }
+
+  if (typeof err === 'string' && err.trim()) {
+    return err.trim()
+  }
+
+  if (!err || typeof err !== 'object') {
+    return fallbackMessage
+  }
+
+  const record = err as Record<string, unknown>
+  const code = asNonEmptyString(record.code)
+  const rawMessage =
+    asNonEmptyString(record.message) ?? asNonEmptyString(record.error_description)
+  const hint = asNonEmptyString(record.hint)
+  const details = asNonEmptyString(record.details)
+
+  if (code === '42501') {
+    return `Permiso denegado en Supabase (${rawMessage ?? 'código 42501'}). Vuelve a ejecutar supabase/schema.sql en el SQL Editor para aplicar los permisos GRANT y las políticas RLS.`
+  }
+
+  if (code === 'PGRST205' || code === '42P01') {
+    return `La Data API de Supabase no encuentra las tablas (${rawMessage ?? code}). Ejecuta supabase/schema.sql en el SQL Editor (incluye recarga de caché) y verifica que "public" esté expuesto en Project Settings → Data API.`
+  }
+
+  if (code === 'PGRST106') {
+    return `El esquema "public" no está expuesto en Supabase (${rawMessage ?? code}). Añade "public" en Project Settings → Data API → Exposed schemas.`
+  }
+
+  if (code === 'PGRST301' || code === 'PGRST302') {
+    return `Sesión o token rechazado por Supabase (${rawMessage ?? code}). Cierra sesión y vuelve a iniciar sesión con Google.`
+  }
+
+  if (rawMessage) {
+    const codeSuffix = code ? ` [${code}]` : ''
+    const extraHint = hint ? ` — ${hint}` : details && !details.includes('\n') ? ` (${details})` : ''
+    return `${rawMessage}${codeSuffix}${extraHint}`
+  }
+
+  if (code) {
+    return `${fallbackMessage} [${code}]${hint ? ` — ${hint}` : ''}`
+  }
+
+  return fallbackMessage
+}
+
+export function toSupabaseSyncError(
+  err: unknown,
+  fallbackMessage = 'No se pudo sincronizar con Supabase.',
+): SupabaseSyncError {
+  if (err instanceof SupabaseSyncError) return err
+  const record = err && typeof err === 'object' ? (err as Record<string, unknown>) : undefined
+  const code = asNonEmptyString(record?.code)
+  const hint = asNonEmptyString(record?.hint)
+  return new SupabaseSyncError(formatSupabaseError(err, fallbackMessage), { code, hint })
+}
+
+export function recipeToDbRow(
+  userId: string,
+  recipe: Recipe,
+  position: number,
+  nowIso = new Date().toISOString(),
+): DbRecipeRow {
   return {
     user_id: userId,
     id: recipe.id,
     position,
-    name: recipe.name,
-    description: recipe.description,
-    servings_yield: recipe.servingsYield,
-    prep_time_minutes: recipe.prepTimeMinutes,
-    emoji: recipe.emoji,
-    tags: recipe.tags,
-    ingredients: recipe.ingredients,
-    steps: recipe.steps,
-    recipe_notes: recipe.recipeNotes,
-    created_at: recipe.createdAt,
-    updated_at: recipe.updatedAt,
+    name: recipe.name || 'Receta sin nombre',
+    description: recipe.description ?? '',
+    servings_yield:
+      Number.isFinite(recipe.servingsYield) && recipe.servingsYield > 0
+        ? recipe.servingsYield
+        : 2,
+    prep_time_minutes: Math.max(1, Math.round(Number(recipe.prepTimeMinutes) || 20)),
+    emoji: recipe.emoji || '🍲',
+    tags: Array.isArray(recipe.tags) ? recipe.tags : [],
+    ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
+    steps: Array.isArray(recipe.steps) ? recipe.steps : [],
+    recipe_notes: Array.isArray(recipe.recipeNotes) ? recipe.recipeNotes : [],
+    created_at: ensureValidIsoTimestamp(recipe.createdAt, nowIso),
+    updated_at: ensureValidIsoTimestamp(recipe.updatedAt, nowIso),
   }
 }
 
@@ -125,11 +223,12 @@ export function weekPlanToDbRow(
   return {
     user_id: userId,
     week_start: plan.weekStart,
-    entries: plan.entries,
-    batch_overrides: plan.batchOverrides,
-    checked_shopping_keys: plan.checkedShoppingKeys,
-    added_to_pantry_keys: plan.addedToPantryKeys,
-    extra_shopping_items: plan.extraShoppingItems,
+    entries: Array.isArray(plan.entries) ? plan.entries : [],
+    batch_overrides:
+      plan.batchOverrides && typeof plan.batchOverrides === 'object' ? plan.batchOverrides : {},
+    checked_shopping_keys: Array.isArray(plan.checkedShoppingKeys) ? plan.checkedShoppingKeys : [],
+    added_to_pantry_keys: Array.isArray(plan.addedToPantryKeys) ? plan.addedToPantryKeys : [],
+    extra_shopping_items: Array.isArray(plan.extraShoppingItems) ? plan.extraShoppingItems : [],
     updated_at: nowIso,
   }
 }
@@ -150,18 +249,22 @@ export function pantryItemToDbRow(
   userId: string,
   item: PantryItem,
   position: number,
+  nowIso = new Date().toISOString(),
 ): DbPantryItemRow {
   return {
     user_id: userId,
     id: item.id,
     position,
-    name: item.name,
-    quantity: item.quantity,
-    unit: item.unit,
-    category: item.category,
+    name: item.name || 'Ingrediente',
+    quantity: Number.isFinite(item.quantity) ? item.quantity : 0,
+    unit: item.unit || 'ud',
+    category: item.category || 'otros',
     always_available: Boolean(item.alwaysAvailable),
-    min_quantity: item.minQuantity ?? null,
-    updated_at: item.updatedAt,
+    min_quantity:
+      typeof item.minQuantity === 'number' && Number.isFinite(item.minQuantity)
+        ? item.minQuantity
+        : null,
+    updated_at: ensureValidIsoTimestamp(item.updatedAt, nowIso),
   }
 }
 
@@ -271,7 +374,7 @@ export function computeRelationalSyncDiff(
       prevEntry.pos !== idx ||
       JSON.stringify(prevEntry.recipe) !== JSON.stringify(recipe)
     ) {
-      recipesToUpsert.push(recipeToDbRow(userId, recipe, idx))
+      recipesToUpsert.push(recipeToDbRow(userId, recipe, idx, nowIso))
     }
   })
 
@@ -290,7 +393,9 @@ export function computeRelationalSyncDiff(
   for (const [weekStart, plan] of Object.entries(next.weekPlans)) {
     const prevPlan = prevWeeks[weekStart]
     if (!prevPlan || JSON.stringify(prevPlan) !== JSON.stringify(plan)) {
-      weekPlansToUpsert.push(weekPlanToDbRow(userId, plan, nowIso))
+      weekPlansToUpsert.push(
+        weekPlanToDbRow(userId, { ...plan, weekStart: plan.weekStart || weekStart }, nowIso),
+      )
     }
   }
 
@@ -316,7 +421,7 @@ export function computeRelationalSyncDiff(
       prevEntry.pos !== idx ||
       JSON.stringify(prevEntry.item) !== JSON.stringify(item)
     ) {
-      pantryToUpsert.push(pantryItemToDbRow(userId, item, idx))
+      pantryToUpsert.push(pantryItemToDbRow(userId, item, idx, nowIso))
     }
   })
 
@@ -370,15 +475,27 @@ export async function fetchUserCloudSnapshot(
     client.from('user_settings').select('*').eq('user_id', userId).maybeSingle(),
   ])
 
-  if (recipesRes.error) throw recipesRes.error
-  if (weekPlansRes.error) throw weekPlansRes.error
-  if (pantryRes.error) throw pantryRes.error
-  if (settingsRes.error) throw settingsRes.error
+  if (recipesRes.error) throw toSupabaseSyncError(recipesRes.error)
+  if (weekPlansRes.error) throw toSupabaseSyncError(weekPlansRes.error)
+  if (pantryRes.error) throw toSupabaseSyncError(pantryRes.error)
+  if (settingsRes.error) throw toSupabaseSyncError(settingsRes.error)
+
+  // PostgREST convierte respuestas 404 con cuerpo vacío (p. ej. Data API desactivada) en data=null sin error
+  if (
+    !Array.isArray(recipesRes.data) ||
+    !Array.isArray(weekPlansRes.data) ||
+    !Array.isArray(pantryRes.data)
+  ) {
+    throw new SupabaseSyncError(
+      'La Data API de Supabase no devolvió datos válidos (/rest/v1 respondió 404 o vacío). Verifica que "Enable Data API" esté activado y el esquema "public" expuesto en Project Settings → Data API.',
+      { code: 'DATA_API_UNAVAILABLE' },
+    )
+  }
 
   return assembleSnapshotFromDbRows({
-    recipesRows: (recipesRes.data ?? []) as DbRecipeRow[],
-    weekPlansRows: (weekPlansRes.data ?? []) as DbWeekPlanRow[],
-    pantryRows: (pantryRes.data ?? []) as DbPantryItemRow[],
+    recipesRows: recipesRes.data as DbRecipeRow[],
+    weekPlansRows: weekPlansRes.data as DbWeekPlanRow[],
+    pantryRows: pantryRes.data as DbPantryItemRow[],
     settingsRow: (settingsRes.data as DbUserSettingsRow | null) ?? null,
   })
 }
@@ -390,7 +507,7 @@ export async function applyRelationalDiffToSupabase(
 ): Promise<void> {
   if (!diff.hasChanges) return
 
-  const operations: PromiseLike<{ error: { message: string } | null }>[] = []
+  const operations: PromiseLike<{ error: unknown }>[] = []
 
   if (diff.recipeIdsToDelete.length > 0) {
     operations.push(
@@ -453,9 +570,9 @@ export async function applyRelationalDiffToSupabase(
   }
 
   const results = await Promise.all(operations)
-  const failed = results.find((r) => r.error)
+  const failed = results.find((r) => Boolean(r.error))
   if (failed?.error) {
-    throw new Error(failed.error.message)
+    throw toSupabaseSyncError(failed.error, 'Error guardando cambios en Supabase.')
   }
 }
 
@@ -467,12 +584,15 @@ export async function replaceAllUserCloudData(
   client: SupabaseClient,
   userId: string,
   targetSnapshot: AppDataSnapshot,
+  knownRemoteSnapshot?: AppDataSnapshot | null,
 ): Promise<void> {
-  const currentRemote = await fetchUserCloudSnapshot(client, userId)
-  const diff = computeRelationalSyncDiff(
-    userId,
-    currentRemote.hasCloudData ? currentRemote.snapshot : null,
-    targetSnapshot,
-  )
+  let prevSnapshot: AppDataSnapshot | null
+  if (knownRemoteSnapshot !== undefined) {
+    prevSnapshot = knownRemoteSnapshot
+  } else {
+    const currentRemote = await fetchUserCloudSnapshot(client, userId)
+    prevSnapshot = currentRemote.hasCloudData ? currentRemote.snapshot : null
+  }
+  const diff = computeRelationalSyncDiff(userId, prevSnapshot, targetSnapshot)
   await applyRelationalDiffToSupabase(client, userId, diff)
 }

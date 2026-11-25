@@ -20,8 +20,8 @@ export interface FoodStoreContextValue {
   cloudSyncStatus: CloudSyncStatus
   cloudSyncError: string | null
   lastSyncedAt: string | null
-  refreshFromCloud: () => Promise<void>
-  importLocalGuestDataToCloud: () => Promise<void>
+  refreshFromCloud: () => Promise<boolean>
+  importLocalGuestDataToCloud: () => Promise<boolean>
   activeWeekStart: string
   setActiveWeekStart: (mondayIso: string) => void
   goToWeekOffset: (deltaWeeks: number) => void
@@ -61,6 +61,8 @@ export interface FoodStoreContextValue {
     unit: Unit
     category: IngredientCategory
   }) => void
+  updateExtraShoppingItemQuantity: (id: string, quantity: number) => void
+  addPantryItemsToShopping: (items: PantryItem[]) => number
   toggleExtraShoppingItem: (id: string) => void
   removeExtraShoppingItem: (id: string) => void
   clearCheckedExtraItems: () => void

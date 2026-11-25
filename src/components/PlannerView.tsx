@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Copy,
   Minus,
+  Package,
   Plus,
   RotateCcw,
   Search,
@@ -23,6 +24,12 @@ import {
   getMondayIso,
   isTodayInDaySlot,
 } from '../lib/dates'
+import {
+  evaluateRecipeAgainstPantry,
+  isPantryItemAvailable,
+  rankRecipesByPantry,
+  type RecipePantryMatchResult,
+} from '../lib/pantryRecipeMatcher'
 import { formatBatchesLabel, type WeekRecipeBatchSummary } from '../lib/plannerEngine'
 import { formatNumberEs, roundClean } from '../lib/units'
 import {
@@ -85,6 +92,7 @@ export function PlannerView() {
 
   const [showBatchPicker, setShowBatchPicker] = useState(false)
   const [batchPickerSearch, setBatchPickerSearch] = useState('')
+  const [prioritizePickerByPantry, setPrioritizePickerByPantry] = useState(false)
 
   const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null)
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
@@ -175,26 +183,58 @@ export function PlannerView() {
     [weekRecipeSummaries],
   )
 
+  const hasAvailablePantry = useMemo(
+    () => snapshot.pantry.some(isPantryItemAvailable),
+    [snapshot.pantry],
+  )
+
+  const pantryMatchByRecipeId = useMemo(() => {
+    const map = new Map<string, RecipePantryMatchResult>()
+    if (!hasAvailablePantry) return map
+    for (const r of snapshot.recipes) {
+      map.set(r.id, evaluateRecipeAgainstPantry(r, snapshot.pantry))
+    }
+    return map
+  }, [snapshot.recipes, snapshot.pantry, hasAvailablePantry])
+
   const filteredPickerRecipes = useMemo(() => {
     const q = slotPickerSearch.trim().toLowerCase()
-    if (!q) return snapshot.recipes
-    return snapshot.recipes.filter(
-      (r) =>
-        r.name.toLowerCase().includes(q) ||
-        r.tags.some((t) => t.toLowerCase().includes(q)) ||
-        r.ingredients.some((i) => i.name.toLowerCase().includes(q)),
-    )
-  }, [snapshot.recipes, slotPickerSearch])
+    const base = !q
+      ? snapshot.recipes
+      : snapshot.recipes.filter(
+          (r) =>
+            r.name.toLowerCase().includes(q) ||
+            r.tags.some((t) => t.toLowerCase().includes(q)) ||
+            r.ingredients.some((i) => i.name.toLowerCase().includes(q)),
+        )
+    if (!prioritizePickerByPantry || !hasAvailablePantry) return base
+    return rankRecipesByPantry(base, snapshot.pantry).map((res) => res.recipe)
+  }, [
+    snapshot.recipes,
+    snapshot.pantry,
+    slotPickerSearch,
+    prioritizePickerByPantry,
+    hasAvailablePantry,
+  ])
 
   const filteredBatchPickerRecipes = useMemo(() => {
     const q = batchPickerSearch.trim().toLowerCase()
-    if (!q) return snapshot.recipes
-    return snapshot.recipes.filter(
-      (r) =>
-        r.name.toLowerCase().includes(q) ||
-        r.tags.some((t) => t.toLowerCase().includes(q)),
-    )
-  }, [snapshot.recipes, batchPickerSearch])
+    const base = !q
+      ? snapshot.recipes
+      : snapshot.recipes.filter(
+          (r) =>
+            r.name.toLowerCase().includes(q) ||
+            r.tags.some((t) => t.toLowerCase().includes(q)),
+        )
+    if (!prioritizePickerByPantry || !hasAvailablePantry) return base
+    return rankRecipesByPantry(base, snapshot.pantry).map((res) => res.recipe)
+  }, [
+    snapshot.recipes,
+    snapshot.pantry,
+    batchPickerSearch,
+    prioritizePickerByPantry,
+    hasAvailablePantry,
+  ])
 
   return (
     <div className="space-y-6">
@@ -838,20 +878,37 @@ export function PlannerView() {
 
               {/* Buscador de todas las recetas */}
               <div>
-                <div className="relative mb-3">
-                  <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-stone-400" />
-                  <input
-                    type="text"
-                    value={slotPickerSearch}
-                    onChange={(e) => setSlotPickerSearch(e.target.value)}
-                    placeholder="Buscar en el recetario..."
-                    className="w-full rounded-xl border border-stone-300 py-2 pr-3 pl-9 text-sm focus:border-emerald-600 focus:outline-none"
-                  />
+                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="relative flex-1">
+                    <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                    <input
+                      type="text"
+                      value={slotPickerSearch}
+                      onChange={(e) => setSlotPickerSearch(e.target.value)}
+                      placeholder="Buscar en el recetario..."
+                      className="w-full rounded-xl border border-stone-300 py-2 pr-3 pl-9 text-sm focus:border-emerald-600 focus:outline-none"
+                    />
+                  </div>
+                  {hasAvailablePantry && (
+                    <button
+                      type="button"
+                      onClick={() => setPrioritizePickerByPantry((v) => !v)}
+                      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                        prioritizePickerByPantry
+                          ? 'border-emerald-700 bg-emerald-700 text-white'
+                          : 'border-stone-200 bg-stone-50 text-stone-700 hover:border-emerald-300 hover:bg-emerald-50'
+                      }`}
+                    >
+                      <Package className="h-3.5 w-3.5" />
+                      Según despensa
+                    </button>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
                   {filteredPickerRecipes.map((rec) => {
                     const sum = summaryByRecipeId.get(rec.id)
+                    const pMatch = pantryMatchByRecipeId.get(rec.id)
                     return (
                       <button
                         key={rec.id}
@@ -870,7 +927,22 @@ export function PlannerView() {
                         <div className="flex items-center gap-2.5">
                           <span className="text-xl">{rec.emoji}</span>
                           <div>
-                            <p className="text-sm font-semibold text-stone-900">{rec.name}</p>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <p className="text-sm font-semibold text-stone-900">{rec.name}</p>
+                              {pMatch && pMatch.scoreMatchCount > 0 && (
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                    pMatch.canCookFullBatchNow
+                                      ? 'bg-emerald-100 text-emerald-900'
+                                      : 'bg-stone-100 text-stone-700'
+                                  }`}
+                                >
+                                  {pMatch.canCookFullBatchNow
+                                    ? '¡Todo en casa!'
+                                    : `${pMatch.scoreMatchCount} en casa`}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs text-stone-500">
                               1 lote rinde <strong>{rec.servingsYield} rac.</strong> ·{' '}
                               {rec.prepTimeMinutes} min
@@ -880,7 +952,7 @@ export function PlannerView() {
                             </p>
                           </div>
                         </div>
-                        <span className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
+                        <span className="shrink-0 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
                           + {formatNumberEs(slotPickerServings)} rac.
                         </span>
                       </button>
@@ -1043,47 +1115,81 @@ export function PlannerView() {
             </div>
 
             <div className="flex-1 space-y-3 overflow-y-auto p-5">
-              <div className="relative">
-                <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-stone-400" />
-                <input
-                  type="text"
-                  value={batchPickerSearch}
-                  onChange={(e) => setBatchPickerSearch(e.target.value)}
-                  placeholder="Buscar receta..."
-                  className="w-full rounded-xl border border-stone-300 py-2 pr-3 pl-9 text-sm focus:border-emerald-600 focus:outline-none"
-                />
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="relative flex-1">
+                  <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                  <input
+                    type="text"
+                    value={batchPickerSearch}
+                    onChange={(e) => setBatchPickerSearch(e.target.value)}
+                    placeholder="Buscar receta..."
+                    className="w-full rounded-xl border border-stone-300 py-2 pr-3 pl-9 text-sm focus:border-emerald-600 focus:outline-none"
+                  />
+                </div>
+                {hasAvailablePantry && (
+                  <button
+                    type="button"
+                    onClick={() => setPrioritizePickerByPantry((v) => !v)}
+                    className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                      prioritizePickerByPantry
+                        ? 'border-emerald-700 bg-emerald-700 text-white'
+                        : 'border-stone-200 bg-stone-50 text-stone-700 hover:border-emerald-300 hover:bg-emerald-50'
+                    }`}
+                  >
+                    <Package className="h-3.5 w-3.5" />
+                    Según despensa
+                  </button>
+                )}
               </div>
 
               <div className="space-y-2">
-                {filteredBatchPickerRecipes.map((rec) => (
-                  <div
-                    key={rec.id}
-                    className="flex items-center justify-between rounded-xl border border-stone-200 p-3 hover:border-emerald-300"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xl">{rec.emoji}</span>
-                      <div>
-                        <p className="text-sm font-semibold text-stone-900">{rec.name}</p>
-                        <p className="text-xs text-stone-500">
-                          1 lote = <strong>{rec.servingsYield} raciones</strong>
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        prepareRecipeBatchForWeek(rec.id, 1)
-                        setShowBatchPicker(false)
-                        notify(
-                          `Lote de "${rec.name}" (${rec.servingsYield} raciones) listo para repartir.`,
-                        )
-                      }}
-                      className="rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
+                {filteredBatchPickerRecipes.map((rec) => {
+                  const pMatch = pantryMatchByRecipeId.get(rec.id)
+                  return (
+                    <div
+                      key={rec.id}
+                      className="flex items-center justify-between gap-2 rounded-xl border border-stone-200 p-3 hover:border-emerald-300"
                     >
-                      + 1 lote ({rec.servingsYield} rac.)
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xl">{rec.emoji}</span>
+                        <div>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <p className="text-sm font-semibold text-stone-900">{rec.name}</p>
+                            {pMatch && pMatch.scoreMatchCount > 0 && (
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                  pMatch.canCookFullBatchNow
+                                    ? 'bg-emerald-100 text-emerald-900'
+                                    : 'bg-stone-100 text-stone-700'
+                                }`}
+                              >
+                                {pMatch.canCookFullBatchNow
+                                  ? '¡Todo en casa!'
+                                  : `${pMatch.scoreMatchCount} en casa`}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-stone-500">
+                            1 lote = <strong>{rec.servingsYield} raciones</strong>
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          prepareRecipeBatchForWeek(rec.id, 1)
+                          setShowBatchPicker(false)
+                          notify(
+                            `Lote de "${rec.name}" (${rec.servingsYield} raciones) listo para repartir.`,
+                          )
+                        }}
+                        className="shrink-0 rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
+                      >
+                        + 1 lote ({rec.servingsYield} rac.)
+                      </button>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>

@@ -1,10 +1,12 @@
 import { createSeedSnapshot, DEFAULT_SETTINGS } from '../data/seedData'
-import type {
-  AppDataSnapshot,
-  Recipe,
-  RecipeIngredient,
-  RecipeNote,
-  RecipeStep,
+import {
+  GENERIC_GROUP_META,
+  type AppDataSnapshot,
+  type GenericIngredientGroup,
+  type Recipe,
+  type RecipeIngredient,
+  type RecipeNote,
+  type RecipeStep,
 } from '../types/food'
 
 const DB_NAME = 'foodmanager_db'
@@ -39,16 +41,40 @@ export function sanitizeRecipe(raw: unknown, fallbackIdx = 0): Recipe | null {
   const rawIngredients = Array.isArray(r.ingredients) ? r.ingredients : []
   const ingredients: RecipeIngredient[] = rawIngredients
     .filter((ing): ing is Record<string, unknown> => Boolean(ing && typeof ing === 'object'))
-    .map((ing, idx) => ({
-      id: typeof ing.id === 'string' && ing.id ? ing.id : `${id}-ing-${idx + 1}`,
-      name: typeof ing.name === 'string' ? ing.name : '',
-      quantity: typeof ing.quantity === 'number' && Number.isFinite(ing.quantity) ? ing.quantity : 1,
-      unit: (typeof ing.unit === 'string' ? ing.unit : 'ud') as RecipeIngredient['unit'],
-      category: (typeof ing.category === 'string'
-        ? ing.category
-        : 'otros') as RecipeIngredient['category'],
-      optional: Boolean(ing.optional),
-    }))
+    .map((ing, idx) => {
+      const rawSubs = Array.isArray(ing.substitutes) ? ing.substitutes : []
+      const seenSubs = new Set<string>()
+      const substitutes: string[] = []
+      for (const s of rawSubs) {
+        if (typeof s !== 'string') continue
+        const trimmed = s.trim()
+        const key = trimmed.toLowerCase()
+        if (trimmed && !seenSubs.has(key)) {
+          seenSubs.add(key)
+          substitutes.push(trimmed)
+        }
+      }
+
+      const rawGroup = typeof ing.genericGroup === 'string' ? ing.genericGroup : undefined
+      const genericGroup =
+        rawGroup && rawGroup in GENERIC_GROUP_META
+          ? (rawGroup as GenericIngredientGroup)
+          : undefined
+
+      return {
+        id: typeof ing.id === 'string' && ing.id ? ing.id : `${id}-ing-${idx + 1}`,
+        name: typeof ing.name === 'string' ? ing.name : '',
+        quantity:
+          typeof ing.quantity === 'number' && Number.isFinite(ing.quantity) ? ing.quantity : 1,
+        unit: (typeof ing.unit === 'string' ? ing.unit : 'ud') as RecipeIngredient['unit'],
+        category: (typeof ing.category === 'string'
+          ? ing.category
+          : 'otros') as RecipeIngredient['category'],
+        optional: Boolean(ing.optional),
+        ...(substitutes.length > 0 ? { substitutes } : {}),
+        ...(genericGroup ? { genericGroup } : {}),
+      }
+    })
     .filter((ing) => ing.name.trim().length > 0)
 
   const rawSteps = Array.isArray(r.steps) ? r.steps : []

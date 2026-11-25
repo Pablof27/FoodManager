@@ -106,17 +106,22 @@ export function AuthModal({ onClose }: AuthModalProps) {
     setIsRefreshing(true)
     setStatusNotice(null)
     try {
-      await refreshFromCloud()
-      setStatusNotice('Datos sincronizados con Supabase.')
+      const ok = await refreshFromCloud()
+      if (ok) {
+        setStatusNotice('Datos sincronizados con Supabase.')
+      }
     } finally {
       setIsRefreshing(false)
     }
   }
 
   const handleImportLocal = async () => {
-    await importLocalGuestDataToCloud()
+    setStatusNotice(null)
+    const ok = await importLocalGuestDataToCloud()
     setConfirmImportLocal(false)
-    setStatusNotice('Tus datos del modo local se han copiado a tu cuenta en la nube.')
+    if (ok) {
+      setStatusNotice('Tus datos del modo local se han copiado a tu cuenta en la nube.')
+    }
   }
 
   const handleCopyRedirect = async () => {
@@ -180,13 +185,15 @@ export function AuthModal({ onClose }: AuthModalProps) {
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
                 <span>{combinedError}</span>
               </div>
-              {cloudSyncError && (
-                <p className="pl-6 text-[11px] text-rose-700">
-                  Si acabas de crear el proyecto en Supabase, asegúrate de haber ejecutado{' '}
-                  <code className="rounded bg-rose-100 px-1 py-0.5">supabase/schema.sql</code> en el
-                  SQL Editor.
-                </p>
-              )}
+              {cloudSyncError &&
+                !cloudSyncError.includes('schema.sql') &&
+                !cloudSyncError.includes('Data API') && (
+                  <p className="pl-6 text-[11px] text-rose-700">
+                    Si las tablas siguen vacías en Supabase, vuelve a ejecutar{' '}
+                    <code className="rounded bg-rose-100 px-1 py-0.5">supabase/schema.sql</code> en el
+                    SQL Editor (aplica permisos GRANT y recarga la caché).
+                  </p>
+                )}
             </div>
           )}
 

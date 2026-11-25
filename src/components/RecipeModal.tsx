@@ -1,5 +1,6 @@
 import {
   ArrowDown,
+  ArrowLeftRight,
   ArrowUp,
   Bell,
   Lightbulb,
@@ -15,6 +16,9 @@ import { normalizeIngredientKey, UNIT_OPTIONS } from '../lib/units'
 import {
   CATEGORY_META,
   CATEGORY_ORDER,
+  GENERIC_GROUP_META,
+  GENERIC_INGREDIENT_GROUPS,
+  type GenericIngredientGroup,
   type IngredientCategory,
   type Recipe,
   type RecipeIngredient,
@@ -64,6 +68,10 @@ interface DraftIngredient {
   unit: Unit
   category: IngredientCategory
   optional: boolean
+  substitutes: string[]
+  genericGroup?: GenericIngredientGroup
+  draftSubText: string
+  flexOpen: boolean
 }
 
 interface DraftNote {
@@ -106,14 +114,21 @@ export function RecipeModal({ initialRecipe, onClose, onSaved }: RecipeModalProp
 
   const [ingredients, setIngredients] = useState<DraftIngredient[]>(() => {
     if (initialRecipe && initialRecipe.ingredients.length > 0) {
-      return initialRecipe.ingredients.map((ing) => ({
-        id: ing.id,
-        name: ing.name,
-        quantity: ing.unit === 'al_gusto' ? '0' : String(ing.quantity),
-        unit: ing.unit,
-        category: ing.category,
-        optional: Boolean(ing.optional),
-      }))
+      return initialRecipe.ingredients.map((ing) => {
+        const subs = ing.substitutes ? [...ing.substitutes] : []
+        return {
+          id: ing.id,
+          name: ing.name,
+          quantity: ing.unit === 'al_gusto' ? '0' : String(ing.quantity),
+          unit: ing.unit,
+          category: ing.category,
+          optional: Boolean(ing.optional),
+          substitutes: subs,
+          genericGroup: ing.genericGroup,
+          draftSubText: '',
+          flexOpen: Boolean(ing.genericGroup || subs.length > 0),
+        }
+      })
     }
     return [
       {
@@ -123,6 +138,10 @@ export function RecipeModal({ initialRecipe, onClose, onSaved }: RecipeModalProp
         unit: 'g',
         category: 'verduras_frutas',
         optional: false,
+        substitutes: [],
+        genericGroup: undefined,
+        draftSubText: '',
+        flexOpen: false,
       },
     ]
   })
@@ -196,8 +215,107 @@ export function RecipeModal({ initialRecipe, onClose, onSaved }: RecipeModalProp
         unit: 'ud',
         category: 'verduras_frutas',
         optional,
+        substitutes: [],
+        genericGroup: undefined,
+        draftSubText: '',
+        flexOpen: false,
       },
     ])
+  }
+
+  const addGenericIngredientRow = () => {
+    const defaultMeta = GENERIC_GROUP_META.verdura_guarnicion
+    setIngredients((prev) => [
+      ...prev,
+      {
+        id: makeTempId('ing'),
+        name: defaultMeta.defaultName,
+        quantity: '250',
+        unit: defaultMeta.defaultUnit,
+        category: defaultMeta.defaultCategory,
+        optional: false,
+        substitutes: [],
+        genericGroup: 'verdura_guarnicion',
+        draftSubText: '',
+        flexOpen: true,
+      },
+    ])
+  }
+
+  const handleGenericGroupChange = (
+    id: string,
+    nextGroupValue: string,
+  ) => {
+    const nextGroup = nextGroupValue
+      ? (nextGroupValue as GenericIngredientGroup)
+      : undefined
+    const defaultNamesSet = new Set(
+      GENERIC_INGREDIENT_GROUPS.map((g) => g.defaultName.toLowerCase()),
+    )
+
+    setIngredients((prev) =>
+      prev.map((row) => {
+        if (row.id !== id) return row
+        if (!nextGroup) {
+          return { ...row, genericGroup: undefined }
+        }
+        const meta = GENERIC_GROUP_META[nextGroup]
+        const currentTrimmed = row.name.trim()
+        const shouldReplaceName =
+          !currentTrimmed || defaultNamesSet.has(currentTrimmed.toLowerCase())
+
+        return {
+          ...row,
+          genericGroup: nextGroup,
+          name: shouldReplaceName ? meta.defaultName : row.name,
+          category: shouldReplaceName ? meta.defaultCategory : row.category,
+          unit: shouldReplaceName ? meta.defaultUnit : row.unit,
+        }
+      }),
+    )
+  }
+
+  const addSubstitutesToRow = (id: string, rawText: string) => {
+    const parts = rawText
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+    if (parts.length === 0) return
+
+    setIngredients((prev) =>
+      prev.map((row) => {
+        if (row.id !== id) return row
+        const existingNorms = new Set(
+          [row.name, ...row.substitutes].map((x) => normalizeIngredientKey(x)),
+        )
+        const nextSubs = [...row.substitutes]
+        for (const p of parts) {
+          const norm = normalizeIngredientKey(p)
+          if (norm && !existingNorms.has(norm)) {
+            existingNorms.add(norm)
+            nextSubs.push(p)
+          }
+        }
+        return {
+          ...row,
+          substitutes: nextSubs,
+          draftSubText: '',
+        }
+      }),
+    )
+  }
+
+  const removeSubstituteFromRow = (id: string, subToRemove: string) => {
+    setIngredients((prev) =>
+      prev.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              substitutes: row.substitutes.filter((s) => s !== subToRemove),
+            }
+          : row,
+      ),
+    )
   }
 
   const removeIngredientRow = (id: string) => {
@@ -330,6 +448,22 @@ export function RecipeModal({ initialRecipe, onClose, onSaved }: RecipeModalProp
             ? qtyNum
             : 1
 
+      // Incluir cualquier sustituto que haya quedado escrito en el input auxiliar sin pulsar Enter
+      const pendingSubs = row.draftSubText
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+      const mergedSubs: string[] = []
+      const seenNorms = new Set<string>([normalizeIngredientKey(ingName)])
+      for (const candidate of [...row.substitutes, ...pendingSubs]) {
+        const trimmed = candidate.trim()
+        const norm = normalizeIngredientKey(trimmed)
+        if (trimmed && norm && !seenNorms.has(norm)) {
+          seenNorms.add(norm)
+          mergedSubs.push(trimmed)
+        }
+      }
+
       validIngredients.push({
         id: row.id,
         name: ingName,
@@ -337,6 +471,8 @@ export function RecipeModal({ initialRecipe, onClose, onSaved }: RecipeModalProp
         unit: row.unit,
         category: row.category,
         optional: row.optional,
+        ...(mergedSubs.length > 0 ? { substitutes: mergedSubs } : {}),
+        ...(row.genericGroup ? { genericGroup: row.genericGroup } : {}),
       })
     }
 
@@ -573,7 +709,7 @@ export function RecipeModal({ initialRecipe, onClose, onSaved }: RecipeModalProp
             </div>
           </div>
 
-          {/* Ingredientes indispensables y opcionales */}
+          {/* Ingredientes indispensables, genéricos y opcionales */}
           <div>
             <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
               <div>
@@ -581,7 +717,8 @@ export function RecipeModal({ initialRecipe, onClose, onSaved }: RecipeModalProp
                   Ingredientes para 1 lote ({servingsYield || 1} raciones) *
                 </h3>
                 <p className="text-xs text-stone-500">
-                  Marca como <strong>Opcional</strong> los extras que mejoran o sofistican la receta básica.
+                  Puedes definir <strong>sustitutos</strong> (ej. brócoli, setas…) o marcar un ingrediente como{' '}
+                  <strong>comodín</strong> para recetas de aprovechamiento.
                 </p>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -595,6 +732,13 @@ export function RecipeModal({ initialRecipe, onClose, onSaved }: RecipeModalProp
                 </button>
                 <button
                   type="button"
+                  onClick={addGenericIngredientRow}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-900 transition hover:bg-teal-100"
+                >
+                  <ArrowLeftRight className="h-3.5 w-3.5" />+ Comodín / aprovechamiento
+                </button>
+                <button
+                  type="button"
                   onClick={() => addIngredientRow(true)}
                   className="inline-flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-800 transition hover:bg-violet-100"
                 >
@@ -603,100 +747,281 @@ export function RecipeModal({ initialRecipe, onClose, onSaved }: RecipeModalProp
               </div>
             </div>
 
-            <div className="space-y-2">
-              {ingredients.map((row) => (
-                <div
-                  key={row.id}
-                  className={`grid grid-cols-1 gap-2 rounded-xl border p-2.5 transition sm:grid-cols-[1fr_82px_138px_165px_auto_auto] ${
-                    row.optional
-                      ? 'border-dashed border-violet-300 bg-violet-50/40'
-                      : 'border-stone-200 bg-stone-50/60'
-                  }`}
-                >
-                  <input
-                    type="text"
-                    list="known-ingredients-datalist"
-                    value={row.name}
-                    onChange={(e) => handleIngredientNameChange(row.id, e.target.value)}
-                    placeholder={
-                      row.optional
-                        ? 'Ingrediente opcional (ej. Chorizo, Sésamo...)'
-                        : 'Ingrediente indispensable (ej. Arroz redondo)'
-                    }
-                    className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm text-stone-900 focus:border-emerald-600 focus:outline-none"
-                  />
-                  <input
-                    type="number"
-                    min={0}
-                    step="any"
-                    disabled={row.unit === 'al_gusto'}
-                    value={row.unit === 'al_gusto' ? '' : row.quantity}
-                    onChange={(e) => updateIngredientField(row.id, 'quantity', e.target.value)}
-                    placeholder={row.unit === 'al_gusto' ? '—' : 'Cant.'}
-                    className="rounded-lg border border-stone-300 bg-white px-2.5 py-1.5 text-sm text-stone-900 disabled:bg-stone-100 disabled:text-stone-400 focus:border-emerald-600 focus:outline-none"
-                  />
-                  <select
-                    value={row.unit}
-                    onChange={(e) =>
-                      updateIngredientField(row.id, 'unit', e.target.value as Unit)
-                    }
-                    className="rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm text-stone-900 focus:border-emerald-600 focus:outline-none"
-                  >
-                    {UNIT_OPTIONS.map((u) => (
-                      <option key={u.value} value={u.value}>
-                        {u.label}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={row.category}
-                    onChange={(e) =>
-                      updateIngredientField(
-                        row.id,
-                        'category',
-                        e.target.value as IngredientCategory,
-                      )
-                    }
-                    className="rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm text-stone-900 focus:border-emerald-600 focus:outline-none"
-                  >
-                    {CATEGORY_ORDER.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {CATEGORY_META[cat].emoji} {CATEGORY_META[cat].label}
-                      </option>
-                    ))}
-                  </select>
+            <div className="space-y-2.5">
+              {ingredients.map((row) => {
+                const hasFlexConfig =
+                  Boolean(row.genericGroup) || row.substitutes.length > 0
+                const groupMeta = row.genericGroup
+                  ? GENERIC_GROUP_META[row.genericGroup]
+                  : undefined
+                const existingNormSet = new Set(
+                  [row.name, ...row.substitutes].map((s) => normalizeIngredientKey(s)),
+                )
+                const availableSuggestions = groupMeta
+                  ? groupMeta.suggestedSubstitutes.filter(
+                      (s) => !existingNormSet.has(normalizeIngredientKey(s)),
+                    )
+                  : []
 
-                  <button
-                    type="button"
-                    onClick={() => updateIngredientField(row.id, 'optional', !row.optional)}
-                    className={`inline-flex items-center justify-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition ${
+                return (
+                  <div
+                    key={row.id}
+                    className={`rounded-xl border p-2.5 transition ${
                       row.optional
-                        ? 'border-violet-300 bg-violet-100 text-violet-900 hover:bg-violet-200/70'
-                        : 'border-stone-300 bg-white text-stone-600 hover:bg-stone-100'
+                        ? 'border-dashed border-violet-300 bg-violet-50/40'
+                        : hasFlexConfig
+                          ? 'border-teal-200 bg-teal-50/25'
+                          : 'border-stone-200 bg-stone-50/60'
                     }`}
-                    title="Alternar entre ingrediente indispensable y opcional"
                   >
-                    {row.optional ? (
-                      <>
-                        <Sparkles className="h-3 w-3" />
-                        Opcional
-                      </>
-                    ) : (
-                      'Básico'
-                    )}
-                  </button>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_80px_132px_158px_auto_auto_auto]">
+                      <input
+                        type="text"
+                        list="known-ingredients-datalist"
+                        value={row.name}
+                        onChange={(e) => handleIngredientNameChange(row.id, e.target.value)}
+                        placeholder={
+                          row.genericGroup
+                            ? 'Nombre visible (ej. Verdura de aprovechamiento, Picante...)'
+                            : row.optional
+                              ? 'Ingrediente opcional (ej. Chorizo, Sésamo...)'
+                              : 'Ingrediente principal (ej. Espárragos verdes)'
+                        }
+                        className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm text-stone-900 focus:border-emerald-600 focus:outline-none"
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        step="any"
+                        disabled={row.unit === 'al_gusto'}
+                        value={row.unit === 'al_gusto' ? '' : row.quantity}
+                        onChange={(e) =>
+                          updateIngredientField(row.id, 'quantity', e.target.value)
+                        }
+                        placeholder={row.unit === 'al_gusto' ? '—' : 'Cant.'}
+                        className="rounded-lg border border-stone-300 bg-white px-2.5 py-1.5 text-sm text-stone-900 disabled:bg-stone-100 disabled:text-stone-400 focus:border-emerald-600 focus:outline-none"
+                      />
+                      <select
+                        value={row.unit}
+                        onChange={(e) =>
+                          updateIngredientField(row.id, 'unit', e.target.value as Unit)
+                        }
+                        className="rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm text-stone-900 focus:border-emerald-600 focus:outline-none"
+                      >
+                        {UNIT_OPTIONS.map((u) => (
+                          <option key={u.value} value={u.value}>
+                            {u.label}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={row.category}
+                        onChange={(e) =>
+                          updateIngredientField(
+                            row.id,
+                            'category',
+                            e.target.value as IngredientCategory,
+                          )
+                        }
+                        className="rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-sm text-stone-900 focus:border-emerald-600 focus:outline-none"
+                      >
+                        {CATEGORY_ORDER.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {CATEGORY_META[cat].emoji} {CATEGORY_META[cat].label}
+                          </option>
+                        ))}
+                      </select>
 
-                  <button
-                    type="button"
-                    onClick={() => removeIngredientRow(row.id)}
-                    disabled={ingredients.length <= 1}
-                    className="flex items-center justify-center rounded-lg p-1.5 text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-30"
-                    title="Quitar ingrediente"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateIngredientField(row.id, 'flexOpen', !row.flexOpen)
+                        }
+                        className={`inline-flex items-center justify-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition ${
+                          hasFlexConfig || row.flexOpen
+                            ? 'border-teal-300 bg-teal-100 text-teal-950 hover:bg-teal-200/70'
+                            : 'border-stone-300 bg-white text-stone-600 hover:bg-stone-100'
+                        }`}
+                        title="Configurar sustitutos válidos o familia de ingrediente genérico"
+                      >
+                        <ArrowLeftRight className="h-3 w-3" />
+                        {row.genericGroup
+                          ? 'Comodín'
+                          : row.substitutes.length > 0
+                            ? `Sust. (${row.substitutes.length})`
+                            : 'Sustitutos'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateIngredientField(row.id, 'optional', !row.optional)
+                        }
+                        className={`inline-flex items-center justify-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition ${
+                          row.optional
+                            ? 'border-violet-300 bg-violet-100 text-violet-900 hover:bg-violet-200/70'
+                            : 'border-stone-300 bg-white text-stone-600 hover:bg-stone-100'
+                        }`}
+                        title="Alternar entre ingrediente indispensable y opcional"
+                      >
+                        {row.optional ? (
+                          <>
+                            <Sparkles className="h-3 w-3" />
+                            Opcional
+                          </>
+                        ) : (
+                          'Básico'
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => removeIngredientRow(row.id)}
+                        disabled={ingredients.length <= 1}
+                        className="flex items-center justify-center rounded-lg p-1.5 text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-30"
+                        title="Quitar ingrediente"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {/* Resumen compacto cuando tiene sustitutos/comodín pero el panel está cerrado */}
+                    {!row.flexOpen && hasFlexConfig && (
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-teal-200/70 bg-white/80 px-2.5 py-1 text-[11px] text-teal-950">
+                        <span>
+                          {groupMeta && (
+                            <strong className="mr-1.5">
+                              {groupMeta.emoji} {groupMeta.shortLabel}
+                            </strong>
+                          )}
+                          {row.substitutes.length > 0 && (
+                            <span>Sustitutos: {row.substitutes.join(', ')}</span>
+                          )}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => updateIngredientField(row.id, 'flexOpen', true)}
+                          className="font-semibold text-teal-800 underline"
+                        >
+                          Editar opciones
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Panel desplegable para ingrediente genérico y sustitutos */}
+                    {row.flexOpen && (
+                      <div className="mt-2.5 space-y-2.5 rounded-xl border border-teal-200 bg-white p-3">
+                        <div className="grid gap-2.5 sm:grid-cols-2">
+                          <div>
+                            <label className="mb-1 block text-[11px] font-semibold text-stone-700">
+                              Familia comodín / aprovechamiento (opcional)
+                            </label>
+                            <select
+                              value={row.genericGroup ?? ''}
+                              onChange={(e) =>
+                                handleGenericGroupChange(row.id, e.target.value)
+                              }
+                              className="w-full rounded-lg border border-stone-300 bg-white px-2.5 py-1.5 text-xs text-stone-900 focus:border-teal-600 focus:outline-none"
+                            >
+                              <option value="">
+                                Ninguna (solo ingrediente concreto o sus sustitutos)
+                              </option>
+                              {GENERIC_INGREDIENT_GROUPS.map((grp) => (
+                                <option key={grp.id} value={grp.id}>
+                                  {grp.emoji} {grp.label}
+                                </option>
+                              ))}
+                            </select>
+                            <p className="mt-1 text-[11px] text-stone-500">
+                              Si eliges una familia comodín, cualquier producto compatible de tu despensa cubrirá este ingrediente.
+                            </p>
+                          </div>
+
+                          <div>
+                            <label className="mb-1 block text-[11px] font-semibold text-stone-700">
+                              Sustitutos concretos (ej. brócoli, setas, cayena…)
+                            </label>
+                            <div className="flex gap-1.5">
+                              <input
+                                type="text"
+                                list="known-ingredients-datalist"
+                                value={row.draftSubText}
+                                onChange={(e) =>
+                                  updateIngredientField(
+                                    row.id,
+                                    'draftSubText',
+                                    e.target.value,
+                                  )
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ',') {
+                                    e.preventDefault()
+                                    addSubstitutesToRow(row.id, row.draftSubText)
+                                  }
+                                }}
+                                placeholder="Escribe uno o varios separados por coma..."
+                                className="min-w-0 flex-1 rounded-lg border border-stone-300 px-2.5 py-1.5 text-xs text-stone-900 focus:border-teal-600 focus:outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  addSubstitutesToRow(row.id, row.draftSubText)
+                                }
+                                disabled={!row.draftSubText.trim()}
+                                className="rounded-lg bg-teal-800 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-teal-900 disabled:opacity-35"
+                              >
+                                Añadir
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {row.substitutes.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="text-[11px] font-semibold text-teal-900">
+                              Válidos:
+                            </span>
+                            {row.substitutes.map((sub) => (
+                              <span
+                                key={sub}
+                                className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-950"
+                              >
+                                {sub}
+                                <button
+                                  type="button"
+                                  onClick={() => removeSubstituteFromRow(row.id, sub)}
+                                  className="rounded-full p-0.5 text-teal-700 hover:bg-teal-200/70 hover:text-teal-950"
+                                  aria-label={`Quitar sustituto ${sub}`}
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {availableSuggestions.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1 border-t border-stone-100 pt-2">
+                            <span className="mr-1 text-[11px] text-stone-500">
+                              Sugerencias rápidas:
+                            </span>
+                            {availableSuggestions.map((sug) => (
+                              <button
+                                key={sug}
+                                type="button"
+                                onClick={() => addSubstitutesToRow(row.id, sug)}
+                                className="rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] font-medium text-stone-600 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-900"
+                              >
+                                + {sug}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
 

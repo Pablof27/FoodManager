@@ -2,10 +2,18 @@ import type {
   IngredientCategory,
   PantryItem,
   Recipe,
+  RecipeIngredient,
   Unit,
   WeekPlan,
 } from '../types/food'
 import { CATEGORY_ORDER } from '../types/food'
+import {
+  approximateSpoonRequirement,
+  doesPantryItemMatchSubstituteOrGeneric,
+  formatIngredientFlexibilityHint,
+  isPantryItemAvailable,
+  resolveEffectiveGenericGroup,
+} from './pantryRecipeMatcher'
 import {
   formatNumberEs,
   formatUnitLabel,
@@ -59,6 +67,8 @@ export interface ComputedShoppingItem {
   coveredByAlwaysAvailable: boolean
   /** Nota informativa si el producto existe en despensa pero en otra unidad no convertible */
   otherUnitPantryNote: string | null
+  /** Indicación de sustitutos válidos o familia comodín cuando el ingrediente es flexible */
+  substituteHint: string | null
   netBaseQuantity: number
   netQuantity: number
   netUnit: Unit
@@ -177,6 +187,7 @@ export function computeWeekShoppingList(
     essentialBaseQuantity: number
     optionalBaseQuantity: number
     sources: ShoppingItemSource[]
+    flexIngredients: RecipeIngredient[]
   }
 
   const accumulators = new Map<string, Accumulator>()
@@ -197,6 +208,9 @@ export function computeWeekShoppingList(
       const baseAdded = toBaseQuantity(scaledQuantity, ing.unit)
       const formattedSource =
         ing.unit === 'al_gusto' ? 'Al gusto' : formatUnitLabel(scaledQuantity, ing.unit)
+      const hasFlex =
+        Boolean(ing.substitutes && ing.substitutes.length > 0) ||
+        Boolean(resolveEffectiveGenericGroup(ing))
 
       const existing = accumulators.get(groupKey)
       if (existing) {
@@ -213,6 +227,9 @@ export function computeWeekShoppingList(
           formattedAmount: formattedSource,
           optional: isOpt,
         })
+        if (hasFlex) {
+          existing.flexIngredients.push(ing)
+        }
       } else {
         accumulators.set(groupKey, {
           key: groupKey,
@@ -232,31 +249,53 @@ export function computeWeekShoppingList(
               optional: isOpt,
             },
           ],
+          flexIngredients: hasFlex ? [ing] : [],
         })
       }
     }
   }
 
-  const allComputedItems: ComputedShoppingItem[] = []
+  // Saldo restante de cada ítem de despensa disponible para no descontar dos veces el mismo stock
+  const availablePantry = pantry.filter(isPantryItemAvailable)
+  const remainingPantryBaseById = new Map<string, number>()
+  for (const p of availablePantry) {
+    remainingPantryBaseById.set(p.id, toBaseQuantity(p.quantity, p.unit))
+  }
 
+  interface PassOneState {
+    acc: Accumulator
+    compatiblePantryBase: number
+    incompatiblePantryNotes: string[]
+    coveredByAlwaysAvailable: boolean
+    pantryDeductedBase: number
+    netBase: number
+    substitutedNames: string[]
+  }
+
+  const passOneStates: PassOneState[] = []
+
+  // Pasada 1: Descuento directo por nombre normalizado (preserva prioridad del ingrediente exacto)
   for (const acc of accumulators.values()) {
-    const matchingPantry = pantryByIngredient.get(acc.normalizedName) ?? []
+    const matchingPantry = (pantryByIngredient.get(acc.normalizedName) ?? []).filter(
+      isPantryItemAvailable,
+    )
     const alwaysAvailableMatch = matchingPantry.some((p) => Boolean(p.alwaysAvailable))
 
     let compatiblePantryBase = 0
     const incompatiblePantryNotes: string[] = []
+    const compatibleItems: PantryItem[] = []
 
     for (const p of matchingPantry) {
       if (p.alwaysAvailable) continue
       const pFamily = getUnitFamily(p.unit)
       if (pFamily === acc.family && pFamily !== 'unmeasured') {
-        compatiblePantryBase = roundClean(compatiblePantryBase + toBaseQuantity(p.quantity, p.unit))
+        const rem = remainingPantryBaseById.get(p.id) ?? 0
+        compatiblePantryBase = roundClean(compatiblePantryBase + rem)
+        compatibleItems.push(p)
       } else if (p.quantity > 0 || p.unit === 'al_gusto') {
         incompatiblePantryNotes.push(formatUnitLabel(p.quantity, p.unit))
       }
     }
-
-    const grossInfo = fromBaseQuantity(acc.grossBaseQuantity, acc.family)
 
     let coveredByAlwaysAvailable = false
     let pantryDeductedBase = 0
@@ -268,30 +307,162 @@ export function computeWeekShoppingList(
         pantryDeductedBase = acc.grossBaseQuantity
         netBase = 0
       } else if (acc.family !== 'unmeasured' && compatiblePantryBase > 0) {
-        pantryDeductedBase = roundClean(Math.min(acc.grossBaseQuantity, compatiblePantryBase))
+        let toDeduct = roundClean(Math.min(acc.grossBaseQuantity, compatiblePantryBase))
+        pantryDeductedBase = toDeduct
         netBase = roundClean(Math.max(0, acc.grossBaseQuantity - pantryDeductedBase))
+        for (const p of compatibleItems) {
+          if (toDeduct <= 0) break
+          const rem = remainingPantryBaseById.get(p.id) ?? 0
+          const consumed = roundClean(Math.min(rem, toDeduct))
+          remainingPantryBaseById.set(p.id, roundClean(rem - consumed))
+          toDeduct = roundClean(toDeduct - consumed)
+        }
       } else if (acc.family === 'unmeasured' && matchingPantry.length > 0) {
         coveredByAlwaysAvailable = true
         netBase = 0
       }
     }
 
+    passOneStates.push({
+      acc,
+      compatiblePantryBase,
+      incompatiblePantryNotes,
+      coveredByAlwaysAvailable,
+      pantryDeductedBase,
+      netBase,
+      substitutedNames: [],
+    })
+  }
+
+  // Pasada 2: Si deductPantry está activo y el ingrediente admite sustitutos o es genérico,
+  // aprovechamos las existencias libres en despensa que aún no hayan sido consumidas en la Pasada 1.
+  if (deductPantry) {
+    for (const state of passOneStates) {
+      const { acc } = state
+      if (acc.flexIngredients.length === 0) continue
+      const needsMore =
+        acc.family === 'unmeasured' ? !state.coveredByAlwaysAvailable : state.netBase > 0
+      if (!needsMore) continue
+
+      const candidateSubs = availablePantry
+        .map((p) => {
+          if (normalizeIngredientKey(p.name) === acc.normalizedName) return null
+          let bestKind: 'substitute' | 'generic' | null = null
+          for (const ing of acc.flexIngredients) {
+            const k = doesPantryItemMatchSubstituteOrGeneric(p, ing)
+            if (k === 'substitute') {
+              bestKind = 'substitute'
+              break
+            }
+            if (k === 'generic') {
+              bestKind = 'generic'
+            }
+          }
+          return bestKind ? { item: p, kind: bestKind } : null
+        })
+        .filter((x): x is { item: PantryItem; kind: 'substitute' | 'generic' } => x !== null)
+        .sort((a, b) => {
+          if (a.kind !== b.kind) return a.kind === 'substitute' ? -1 : 1
+          return 0
+        })
+
+      for (const { item: p } of candidateSubs) {
+        const stillNeeded =
+          acc.family === 'unmeasured' ? !state.coveredByAlwaysAvailable : state.netBase > 0
+        if (!stillNeeded) break
+
+        if (p.alwaysAvailable || p.unit === 'al_gusto') {
+          state.coveredByAlwaysAvailable = true
+          state.pantryDeductedBase = acc.grossBaseQuantity
+          state.netBase = 0
+          state.substitutedNames.push(p.name)
+          break
+        }
+
+        if (acc.family === 'unmeasured') {
+          const rem = remainingPantryBaseById.get(p.id) ?? 0
+          if (rem > 0) {
+            state.coveredByAlwaysAvailable = true
+            state.netBase = 0
+            state.substitutedNames.push(p.name)
+            break
+          }
+          continue
+        }
+
+        const pFamily = getUnitFamily(p.unit)
+        const rem = remainingPantryBaseById.get(p.id) ?? 0
+        if (rem <= 0) continue
+
+        if (pFamily === acc.family) {
+          const consumed = roundClean(Math.min(state.netBase, rem))
+          remainingPantryBaseById.set(p.id, roundClean(rem - consumed))
+          state.pantryDeductedBase = roundClean(state.pantryDeductedBase + consumed)
+          state.netBase = roundClean(Math.max(0, state.netBase - consumed))
+          state.substitutedNames.push(p.name)
+        } else if (
+          (acc.family === 'discrete:cucharada' || acc.family === 'discrete:cucharadita') &&
+          (pFamily === 'mass' || pFamily === 'volume')
+        ) {
+          const spoonUnit =
+            acc.family === 'discrete:cucharada' ? 'cucharada' : 'cucharadita'
+          const perSpoon = approximateSpoonRequirement(1, spoonUnit, pFamily)
+          const neededInTarget = roundClean(state.netBase * perSpoon)
+          const consumedTarget = roundClean(Math.min(neededInTarget, rem))
+          const spoonsCovered = roundClean(consumedTarget / perSpoon)
+          remainingPantryBaseById.set(p.id, roundClean(rem - consumedTarget))
+          state.pantryDeductedBase = roundClean(state.pantryDeductedBase + spoonsCovered)
+          state.netBase = roundClean(Math.max(0, state.netBase - spoonsCovered))
+          state.substitutedNames.push(p.name)
+        } else {
+          state.incompatiblePantryNotes.push(
+            `${p.name} (${formatUnitLabel(p.quantity, p.unit)})`,
+          )
+        }
+      }
+    }
+  }
+
+  const allComputedItems: ComputedShoppingItem[] = []
+
+  for (const state of passOneStates) {
+    const {
+      acc,
+      compatiblePantryBase,
+      incompatiblePantryNotes,
+      coveredByAlwaysAvailable,
+      pantryDeductedBase,
+      netBase,
+      substitutedNames,
+    } = state
+
+    const grossInfo = fromBaseQuantity(acc.grossBaseQuantity, acc.family)
+
     const fullyCoveredByPantry =
       deductPantry &&
       (coveredByAlwaysAvailable || (acc.family !== 'unmeasured' && netBase <= 0))
 
     const netInfo = fromBaseQuantity(netBase, acc.family)
-    const deductedFormatted =
-      coveredByAlwaysAvailable
-        ? 'Básico en despensa'
-        : pantryDeductedBase > 0
-          ? fromBaseQuantity(pantryDeductedBase, acc.family).formatted
-          : null
+    const subSuffix =
+      substitutedNames.length > 0 ? ` (usando ${substitutedNames.join(' + ')})` : ''
+
+    const deductedFormatted = coveredByAlwaysAvailable
+      ? substitutedNames.length > 0
+        ? `Usando ${substitutedNames.join(' + ')}`
+        : 'Básico en despensa'
+      : pantryDeductedBase > 0
+        ? `${fromBaseQuantity(pantryDeductedBase, acc.family).formatted}${subSuffix}`
+        : null
 
     const isPurelyOptional = acc.sources.every((s) => Boolean(s.optional))
     const optionalPortionFormatted =
       !isPurelyOptional && acc.optionalBaseQuantity > 0 && acc.family !== 'unmeasured'
         ? fromBaseQuantity(acc.optionalBaseQuantity, acc.family).formatted
+        : null
+
+    const substituteHint =
+      acc.flexIngredients.length > 0
+        ? formatIngredientFlexibilityHint(acc.flexIngredients[0])
         : null
 
     allComputedItems.push({
@@ -312,6 +483,7 @@ export function computeWeekShoppingList(
         incompatiblePantryNotes.length > 0
           ? `En despensa: ${incompatiblePantryNotes.join(', ')}`
           : null,
+      substituteHint,
       netBaseQuantity: netBase,
       netQuantity: netInfo.quantity,
       netUnit: netInfo.unit,
@@ -357,4 +529,57 @@ export function computeWeekShoppingList(
 export function formatBatchesLabel(batches: number): string {
   const num = formatNumberEs(batches)
   return `${num} ${roundClean(batches) === 1 ? 'lote' : 'lotes'}`
+}
+
+/**
+ * Calcula una cantidad sugerida razonable de compra al reponer un producto desde la despensa.
+ * Si tiene `minQuantity` y está por debajo, sugiere la diferencia hasta alcanzar el mínimo;
+ * en caso contrario usa el umbral mínimo o un tamaño de compra estándar según la unidad.
+ */
+export function getSuggestedPantryRestock(item: PantryItem): {
+  quantity: number
+  unit: Unit
+  formatted: string
+} {
+  if (item.unit === 'al_gusto') {
+    return { quantity: 0, unit: 'al_gusto', formatted: 'Al gusto' }
+  }
+
+  if (item.minQuantity !== undefined && Number.isFinite(item.minQuantity) && item.minQuantity > 0) {
+    const safeCurrent = Math.max(0, Number.isFinite(item.quantity) ? item.quantity : 0)
+    const targetQty =
+      safeCurrent < item.minQuantity
+        ? roundClean(item.minQuantity - safeCurrent)
+        : roundClean(item.minQuantity)
+    return {
+      quantity: targetQty,
+      unit: item.unit,
+      formatted: formatUnitLabel(targetQty, item.unit),
+    }
+  }
+
+  switch (item.unit) {
+    case 'g':
+      return { quantity: 500, unit: 'g', formatted: formatUnitLabel(500, 'g') }
+    case 'kg':
+      return { quantity: 1, unit: 'kg', formatted: formatUnitLabel(1, 'kg') }
+    case 'ml':
+      return { quantity: 500, unit: 'ml', formatted: formatUnitLabel(500, 'ml') }
+    case 'l':
+      return { quantity: 1, unit: 'l', formatted: formatUnitLabel(1, 'l') }
+    case 'ud': {
+      const qty = normalizeIngredientKey(item.name) === 'huevo' ? 6 : 1
+      return { quantity: qty, unit: 'ud', formatted: formatUnitLabel(qty, 'ud') }
+    }
+    case 'diente':
+      return { quantity: 6, unit: 'diente', formatted: formatUnitLabel(6, 'diente') }
+    case 'lata':
+      return { quantity: 1, unit: 'lata', formatted: formatUnitLabel(1, 'lata') }
+    case 'sobre':
+      return { quantity: 1, unit: 'sobre', formatted: formatUnitLabel(1, 'sobre') }
+    case 'cucharada':
+      return { quantity: 1, unit: 'cucharada', formatted: formatUnitLabel(1, 'cucharada') }
+    case 'cucharadita':
+      return { quantity: 1, unit: 'cucharadita', formatted: formatUnitLabel(1, 'cucharadita') }
+  }
 }

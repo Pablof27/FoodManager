@@ -38,7 +38,15 @@
           "quantity": 250,
           "unit": "g",
           "category": "verduras_frutas",
-          "optional": false
+          "optional": false,
+          "genericGroup": "verdura_guarnicion",
+          "substitutes": [
+            "Brócoli",
+            "Setas",
+            "Bimi",
+            "Espinacas",
+            "Bok choy"
+          ]
         },
         {
           "id": "ing-acd-4",
@@ -208,7 +216,11 @@
           "quantity": 3,
           "unit": "ud",
           "category": "verduras_frutas",
-          "optional": false
+          "optional": false,
+          "substitutes": [
+            "Ajetes",
+            "Cebolla"
+          ]
         },
         {
           "id": "ing-ddn-4",
@@ -216,7 +228,10 @@
           "quantity": 2,
           "unit": "cucharada",
           "category": "conservas_aceites",
-          "optional": false
+          "optional": false,
+          "substitutes": [
+            "Tahini"
+          ]
         },
         {
           "id": "ing-ddn-5",
@@ -276,11 +291,15 @@
         },
         {
           "id": "ing-ddn-12",
-          "name": "Salsa hoisin (o de ostras)",
+          "name": "Salsa hoisin",
           "quantity": 1,
           "unit": "cucharada",
           "category": "especias_salsas",
-          "optional": true
+          "optional": true,
+          "substitutes": [
+            "Salsa de ostras",
+            "Salsa inglesa"
+          ]
         },
         {
           "id": "ing-ddn-13",
@@ -493,11 +512,18 @@
         },
         {
           "id": "ing-enh-14",
-          "name": "Pollo, bacon o huevo duro",
+          "name": "Proteína al gusto",
           "quantity": 150,
           "unit": "g",
           "category": "carnes_pescados",
-          "optional": true
+          "optional": true,
+          "genericGroup": "proteina",
+          "substitutes": [
+            "Pollo",
+            "Bacon",
+            "Huevo",
+            "Atún"
+          ]
         }
       ],
       "steps": [
@@ -1155,11 +1181,16 @@
         },
         {
           "id": "ing-fj-18",
-          "name": "Crema agria o yogur griego",
+          "name": "Crema agria",
           "quantity": 100,
           "unit": "g",
           "category": "lacteos_huevos",
-          "optional": true
+          "optional": true,
+          "genericGroup": "lacteo_cremoso",
+          "substitutes": [
+            "Yogur griego",
+            "Yogur natural"
+          ]
         },
         {
           "id": "ing-fj-19",
@@ -2050,19 +2081,30 @@
         },
         {
           "id": "ing-ms-14",
-          "name": "Demi-glace o pastilla de caldo",
+          "name": "Demi-glace",
           "quantity": 1,
           "unit": "ud",
           "category": "especias_salsas",
-          "optional": true
+          "optional": true,
+          "genericGroup": "caldo",
+          "substitutes": [
+            "Pastilla de caldo"
+          ]
         },
         {
           "id": "ing-ms-15",
-          "name": "Gochujang o picante",
+          "name": "Gochujang",
           "quantity": 1,
           "unit": "cucharadita",
           "category": "especias_salsas",
-          "optional": true
+          "optional": true,
+          "genericGroup": "picante",
+          "substitutes": [
+            "Cayena",
+            "Tabasco",
+            "Sriracha",
+            "Chile en polvo"
+          ]
         },
         {
           "id": "ing-ms-16",

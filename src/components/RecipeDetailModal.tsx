@@ -1,21 +1,35 @@
 import {
   Bell,
   CalendarPlus,
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
   Clock,
   Edit3,
   Lightbulb,
   Minus,
+  Package,
   Plus,
   Sparkles,
   Users,
   X,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useFoodStore } from '../context/useFoodStore'
+import {
+  evaluateRecipeAgainstPantry,
+  formatIngredientFlexibilityHint,
+  isPantryItemAvailable,
+  resolveEffectiveGenericGroup,
+} from '../lib/pantryRecipeMatcher'
 import { formatBatchesLabel } from '../lib/plannerEngine'
 import { formatUnitLabel, roundClean } from '../lib/units'
-import { CATEGORY_META, type Recipe, type RecipeNote } from '../types/food'
+import {
+  CATEGORY_META,
+  GENERIC_GROUP_META,
+  type Recipe,
+  type RecipeNote,
+} from '../types/food'
 
 interface RecipeDetailModalProps {
   recipe: Recipe
@@ -65,6 +79,7 @@ export function RecipeDetailModal({
   onEdit,
   onPrepareBatchInWeek,
 }: RecipeDetailModalProps) {
+  const { snapshot } = useFoodStore()
   const [batchesPreview, setBatchesPreview] = useState(1)
   const [onlyEssentialMode, setOnlyEssentialMode] = useState(false)
 
@@ -73,6 +88,24 @@ export function RecipeDetailModal({
   const [generalNotesOpen, setGeneralNotesOpen] = useState(false)
 
   const totalServings = roundClean(recipe.servingsYield * batchesPreview)
+
+  const hasAvailablePantry = useMemo(
+    () => snapshot.pantry.some(isPantryItemAvailable),
+    [snapshot.pantry],
+  )
+
+  const pantryEvaluation = useMemo(
+    () =>
+      evaluateRecipeAgainstPantry(recipe, snapshot.pantry, {
+        batches: batchesPreview,
+      }),
+    [recipe, snapshot.pantry, batchesPreview],
+  )
+
+  const matchByIngredientId = useMemo(
+    () => new Map(pantryEvaluation.ingredientMatches.map((m) => [m.ingredient.id, m])),
+    [pantryEvaluation.ingredientMatches],
+  )
 
   const essentialIngredients = useMemo(
     () => recipe.ingredients.filter((i) => !i.optional),
@@ -252,23 +285,87 @@ export function RecipeDetailModal({
           {/* Ingredientes separados claramente entre indispensables y opcionales */}
           <div className="space-y-4">
             <div>
-              <h3 className="mb-2.5 text-sm font-bold text-stone-900">
-                Ingredientes indispensables ({essentialIngredients.length})
-              </h3>
+              <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-bold text-stone-900">
+                  Ingredientes indispensables ({essentialIngredients.length})
+                </h3>
+                {hasAvailablePantry && essentialIngredients.length > 0 && (
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                      pantryEvaluation.canCookFullBatchNow
+                        ? 'bg-emerald-100 text-emerald-900'
+                        : 'bg-stone-100 text-stone-700'
+                    }`}
+                  >
+                    {pantryEvaluation.canCookFullBatchNow ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-700" />
+                    ) : (
+                      <Package className="h-3.5 w-3.5 text-emerald-700" />
+                    )}
+                    {pantryEvaluation.matchedEssentialCount}/{essentialIngredients.length} en
+                    despensa
+                  </span>
+                )}
+              </div>
               <ul className="grid gap-2 sm:grid-cols-2">
                 {essentialIngredients.map((ing) => {
                   const scaledQty = roundClean(ing.quantity * batchesPreview)
                   const catMeta = CATEGORY_META[ing.category]
+                  const pMatch = matchByIngredientId.get(ing.id)
+                  const effGroup = resolveEffectiveGenericGroup(ing)
+                  const groupMeta = effGroup ? GENERIC_GROUP_META[effGroup] : undefined
+                  const flexHint = formatIngredientFlexibilityHint(ing)
+                  const subUsedLabel =
+                    pMatch && pMatch.usedSubstituteNames.length > 0
+                      ? pMatch.usedSubstituteNames.join(' + ')
+                      : null
                   return (
                     <li
                       key={ing.id}
-                      className="flex items-center justify-between rounded-xl border border-stone-200 bg-stone-50/80 px-3 py-2 text-sm"
+                      className={`flex items-start justify-between gap-2 rounded-xl border px-3 py-2 text-sm ${
+                        hasAvailablePantry && pMatch?.status === 'covered'
+                          ? 'border-emerald-200 bg-emerald-50/50'
+                          : hasAvailablePantry && pMatch?.status === 'partial'
+                            ? 'border-amber-200 bg-amber-50/50'
+                            : 'border-stone-200 bg-stone-50/80'
+                      }`}
                     >
-                      <span className="flex items-center gap-2 text-stone-800">
-                        <span>{catMeta.emoji}</span>
-                        <span className="font-medium">{ing.name}</span>
-                      </span>
-                      <span className="font-semibold text-stone-900">
+                      <div className="min-w-0">
+                        <span className="flex flex-wrap items-center gap-1.5 text-stone-800">
+                          <span>{catMeta.emoji}</span>
+                          <span className="font-medium">{ing.name}</span>
+                          {groupMeta && (
+                            <span className="rounded-full bg-teal-100 px-2 py-0.2 text-[10px] font-bold text-teal-900">
+                              {groupMeta.shortLabel}
+                            </span>
+                          )}
+                        </span>
+                        {flexHint && (
+                          <p className="mt-0.5 text-[11px] text-teal-800">
+                            ⇄ {ing.substitutes && ing.substitutes.length > 0
+                              ? `Vale también: ${ing.substitutes.join(', ')}`
+                              : flexHint}
+                          </p>
+                        )}
+                        {hasAvailablePantry && pMatch && pMatch.status !== 'missing' && (
+                          <p
+                            className={`mt-0.5 text-[11px] font-medium ${
+                              pMatch.status === 'partial'
+                                ? 'text-amber-800'
+                                : 'text-emerald-800'
+                            }`}
+                          >
+                            {pMatch.status === 'covered'
+                              ? subUsedLabel
+                                ? `✓ En casa usando ${subUsedLabel} (${pMatch.availableFormatted})`
+                                : `✓ En casa (${pMatch.availableFormatted})`
+                              : subUsedLabel
+                                ? `◐ Usando ${subUsedLabel}: tienes ${pMatch.availableFormatted} · faltan ${pMatch.missingFormatted}`
+                                : `◐ Tienes ${pMatch.availableFormatted} · faltan ${pMatch.missingFormatted}`}
+                          </p>
+                        )}
+                      </div>
+                      <span className="shrink-0 font-semibold text-stone-900">
                         {formatUnitLabel(scaledQty, ing.unit)}
                       </span>
                     </li>
@@ -287,16 +384,55 @@ export function RecipeDetailModal({
                   {optionalIngredients.map((ing) => {
                     const scaledQty = roundClean(ing.quantity * batchesPreview)
                     const catMeta = CATEGORY_META[ing.category]
+                    const pMatch = matchByIngredientId.get(ing.id)
+                    const effGroup = resolveEffectiveGenericGroup(ing)
+                    const groupMeta = effGroup ? GENERIC_GROUP_META[effGroup] : undefined
+                    const flexHint = formatIngredientFlexibilityHint(ing)
+                    const subUsedLabel =
+                      pMatch && pMatch.usedSubstituteNames.length > 0
+                        ? pMatch.usedSubstituteNames.join(' + ')
+                        : null
                     return (
                       <li
                         key={ing.id}
-                        className="flex items-center justify-between rounded-xl border border-violet-200/80 bg-white px-3 py-2 text-sm"
+                        className="flex items-start justify-between gap-2 rounded-xl border border-violet-200/80 bg-white px-3 py-2 text-sm"
                       >
-                        <span className="flex items-center gap-2 text-stone-800">
-                          <span>{catMeta.emoji}</span>
-                          <span>{ing.name}</span>
-                        </span>
-                        <span className="font-semibold text-violet-900">
+                        <div className="min-w-0">
+                          <span className="flex flex-wrap items-center gap-1.5 text-stone-800">
+                            <span>{catMeta.emoji}</span>
+                            <span>{ing.name}</span>
+                            {groupMeta && (
+                              <span className="rounded-full bg-teal-100 px-2 py-0.2 text-[10px] font-bold text-teal-900">
+                                {groupMeta.shortLabel}
+                              </span>
+                            )}
+                          </span>
+                          {flexHint && (
+                            <p className="mt-0.5 text-[11px] text-teal-800">
+                              ⇄ {ing.substitutes && ing.substitutes.length > 0
+                                ? `Vale también: ${ing.substitutes.join(', ')}`
+                                : flexHint}
+                            </p>
+                          )}
+                          {hasAvailablePantry && pMatch && pMatch.status !== 'missing' && (
+                            <p
+                              className={`mt-0.5 text-[11px] font-medium ${
+                                pMatch.status === 'partial'
+                                  ? 'text-amber-800'
+                                  : 'text-emerald-800'
+                              }`}
+                            >
+                              {pMatch.status === 'covered'
+                                ? subUsedLabel
+                                  ? `✓ En casa usando ${subUsedLabel} (${pMatch.availableFormatted})`
+                                  : `✓ En casa (${pMatch.availableFormatted})`
+                                : subUsedLabel
+                                  ? `◐ Usando ${subUsedLabel}: tienes ${pMatch.availableFormatted} · faltan ${pMatch.missingFormatted}`
+                                  : `◐ Tienes ${pMatch.availableFormatted} · faltan ${pMatch.missingFormatted}`}
+                            </p>
+                          )}
+                        </div>
+                        <span className="shrink-0 font-semibold text-violet-900">
                           {formatUnitLabel(scaledQty, ing.unit)}
                         </span>
                       </li>

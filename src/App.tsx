@@ -33,6 +33,7 @@ function FoodManagerShell() {
     cloudSyncError,
   } = useFoodStore()
   const [activeTab, setActiveTab] = useState<ActiveTab>('planner')
+  const [pantrySearchMode, setPantrySearchMode] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
 
@@ -228,9 +229,22 @@ function FoodManagerShell() {
             {activeTab === 'planner' && <PlannerView />}
             {activeTab === 'shopping' && <ShoppingView />}
             {activeTab === 'recipes' && (
-              <RecipesView onNavigateToPlanner={() => setActiveTab('planner')} />
+              <RecipesView
+                onNavigateToPlanner={() => setActiveTab('planner')}
+                onNavigateToPantry={() => setActiveTab('pantry')}
+                pantryMode={pantrySearchMode}
+                onPantryModeChange={setPantrySearchMode}
+              />
             )}
-            {activeTab === 'pantry' && <PantryView />}
+            {activeTab === 'pantry' && (
+              <PantryView
+                onSearchRecipesByPantry={() => {
+                  setPantrySearchMode(true)
+                  setActiveTab('recipes')
+                }}
+                onNavigateToShopping={() => setActiveTab('shopping')}
+              />
+            )}
           </>
         )}
       </main>

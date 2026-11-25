@@ -38,14 +38,22 @@ const INVARIANT_SPANISH_WORDS = new Set([
 
 const STOP_WORDS = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'con', 'sin', 'en', 'al'])
 
+const WORDS_KEEPING_FINAL_E = new Set(['chiles', 'moles', 'files'])
+
 function singularizeWord(word: string): string {
   if (word.length <= 3 || STOP_WORDS.has(word) || INVARIANT_SPANISH_WORDS.has(word)) {
     return word
   }
+  if (WORDS_KEEPING_FINAL_E.has(word)) {
+    return word.slice(0, -1)
+  }
+  if (word === 'coles') {
+    return 'col'
+  }
   if (word.endsWith('ces') && word.length > 4) {
     return `${word.slice(0, -3)}z`
   }
-  if (/[lrndj]es$/.test(word) && word.length > 4) {
+  if (/[aeiou][rln]es$/.test(word) && word.length > 4) {
     return word.slice(0, -2)
   }
   if (/[aeiou]s$/.test(word)) {

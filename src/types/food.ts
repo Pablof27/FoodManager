@@ -136,6 +136,266 @@ export interface RecipeNote {
   text: string
 }
 
+export type GenericIngredientGroup =
+  | 'verdura_guarnicion'
+  | 'hoja_verde'
+  | 'setas_hongos'
+  | 'hierba_fresca'
+  | 'picante'
+  | 'pasta'
+  | 'arroz_grano'
+  | 'legumbre'
+  | 'queso_fundir'
+  | 'lacteo_cremoso'
+  | 'proteina'
+  | 'caldo'
+  | 'acido_citrico'
+  | 'frutos_secos'
+
+export interface GenericGroupMeta {
+  id: GenericIngredientGroup
+  label: string
+  shortLabel: string
+  emoji: string
+  defaultName: string
+  defaultCategory: IngredientCategory
+  defaultUnit: Unit
+  suggestedSubstitutes: readonly string[]
+}
+
+export const GENERIC_INGREDIENT_GROUPS: readonly GenericGroupMeta[] = [
+  {
+    id: 'verdura_guarnicion',
+    label: 'Cualquier verdura u hortaliza (aprovechamiento)',
+    shortLabel: 'Verdura comodín',
+    emoji: '🥦',
+    defaultName: 'Verdura de aprovechamiento',
+    defaultCategory: 'verduras_frutas',
+    defaultUnit: 'g',
+    suggestedSubstitutes: [
+      'Espárragos verdes',
+      'Brócoli',
+      'Setas',
+      'Calabacín',
+      'Berenjena',
+      'Pimiento',
+      'Espinacas',
+      'Zanahoria',
+    ],
+  },
+  {
+    id: 'hoja_verde',
+    label: 'Cualquier hoja verde o brotes',
+    shortLabel: 'Hoja verde comodín',
+    emoji: '🥬',
+    defaultName: 'Hojas verdes al gusto',
+    defaultCategory: 'verduras_frutas',
+    defaultUnit: 'g',
+    suggestedSubstitutes: [
+      'Espinacas frescas',
+      'Rúcula',
+      'Brotes tiernos',
+      'Canónigos',
+      'Lechuga',
+      'Kale',
+    ],
+  },
+  {
+    id: 'setas_hongos',
+    label: 'Cualquier seta o champiñón',
+    shortLabel: 'Setas comodín',
+    emoji: '🍄',
+    defaultName: 'Setas o champiñones',
+    defaultCategory: 'verduras_frutas',
+    defaultUnit: 'g',
+    suggestedSubstitutes: [
+      'Champiñones',
+      'Setas',
+      'Portobello',
+      'Shiitake',
+      'Boletus',
+    ],
+  },
+  {
+    id: 'hierba_fresca',
+    label: 'Cualquier hierba aromática fresca',
+    shortLabel: 'Hierba fresca',
+    emoji: '🌿',
+    defaultName: 'Hierbas frescas',
+    defaultCategory: 'verduras_frutas',
+    defaultUnit: 'al_gusto',
+    suggestedSubstitutes: [
+      'Perejil fresco',
+      'Cilantro fresco',
+      'Albahaca fresca',
+      'Menta fresca',
+      'Cebollino',
+    ],
+  },
+  {
+    id: 'picante',
+    label: 'Cualquier picante (pasta, salsa o especia)',
+    shortLabel: 'Picante comodín',
+    emoji: '🌶️',
+    defaultName: 'Picante al gusto',
+    defaultCategory: 'especias_salsas',
+    defaultUnit: 'cucharadita',
+    suggestedSubstitutes: [
+      'Gochujang',
+      'Cayena',
+      'Tabasco',
+      'Sriracha',
+      'Chile en polvo',
+      'Aceite de chile crujiente',
+    ],
+  },
+  {
+    id: 'pasta',
+    label: 'Cualquier tipo de pasta',
+    shortLabel: 'Pasta comodín',
+    emoji: '🍝',
+    defaultName: 'Pasta al gusto',
+    defaultCategory: 'legumbres_cereales',
+    defaultUnit: 'g',
+    suggestedSubstitutes: [
+      'Macarrones',
+      'Espaguetis',
+      'Hélices',
+      'Penne',
+      'Tallarines',
+      'Noodles',
+    ],
+  },
+  {
+    id: 'arroz_grano',
+    label: 'Cualquier arroz o cereal en grano',
+    shortLabel: 'Arroz / grano comodín',
+    emoji: '🍚',
+    defaultName: 'Arroz o cereal',
+    defaultCategory: 'legumbres_cereales',
+    defaultUnit: 'g',
+    suggestedSubstitutes: [
+      'Arroz redondo',
+      'Arroz basmati',
+      'Arroz integral',
+      'Quinoa',
+      'Cuscús',
+    ],
+  },
+  {
+    id: 'legumbre',
+    label: 'Cualquier legumbre',
+    shortLabel: 'Legumbre comodín',
+    emoji: '🫘',
+    defaultName: 'Legumbre cocida',
+    defaultCategory: 'legumbres_cereales',
+    defaultUnit: 'g',
+    suggestedSubstitutes: [
+      'Garbanzos',
+      'Lentejas',
+      'Alubias blancas',
+      'Judías pintas',
+    ],
+  },
+  {
+    id: 'queso_fundir',
+    label: 'Cualquier queso para fundir o rallar',
+    shortLabel: 'Queso comodín',
+    emoji: '🧀',
+    defaultName: 'Queso para fundir',
+    defaultCategory: 'lacteos_huevos',
+    defaultUnit: 'g',
+    suggestedSubstitutes: [
+      'Mozzarella rallada',
+      'Queso parmesano rallado',
+      'Queso rallado',
+      'Cheddar',
+      'Emmental',
+    ],
+  },
+  {
+    id: 'lacteo_cremoso',
+    label: 'Cualquier lácteo o crema para ligar',
+    shortLabel: 'Cremoso comodín',
+    emoji: '🥛',
+    defaultName: 'Nata o yogur cremoso',
+    defaultCategory: 'lacteos_huevos',
+    defaultUnit: 'ml',
+    suggestedSubstitutes: [
+      'Nata para cocinar',
+      'Yogur griego',
+      'Crema agria',
+      'Leche evaporada',
+      'Queso crema',
+    ],
+  },
+  {
+    id: 'proteina',
+    label: 'Cualquier proteína de aprovechamiento',
+    shortLabel: 'Proteína comodín',
+    emoji: '🍗',
+    defaultName: 'Proteína al gusto',
+    defaultCategory: 'carnes_pescados',
+    defaultUnit: 'g',
+    suggestedSubstitutes: [
+      'Pollo',
+      'Huevo',
+      'Atún',
+      'Bacon',
+      'Tofu',
+      'Carne picada',
+      'Salmón',
+    ],
+  },
+  {
+    id: 'caldo',
+    label: 'Cualquier caldo o pastilla',
+    shortLabel: 'Caldo comodín',
+    emoji: '🥣',
+    defaultName: 'Caldo al gusto',
+    defaultCategory: 'conservas_aceites',
+    defaultUnit: 'ml',
+    suggestedSubstitutes: [
+      'Caldo de pollo',
+      'Caldo de verduras',
+      'Caldo de carne',
+      'Pastilla de caldo',
+    ],
+  },
+  {
+    id: 'acido_citrico',
+    label: 'Cualquier cítrico o vinagre',
+    shortLabel: 'Ácido / cítrico',
+    emoji: '🍋',
+    defaultName: 'Limón, lima o vinagre',
+    defaultCategory: 'verduras_frutas',
+    defaultUnit: 'ud',
+    suggestedSubstitutes: ['Limón', 'Lima', 'Vinagre de manzana', 'Vinagre de arroz'],
+  },
+  {
+    id: 'frutos_secos',
+    label: 'Cualquier fruto seco o semilla',
+    shortLabel: 'Fruto seco comodín',
+    emoji: '🥜',
+    defaultName: 'Frutos secos o semillas',
+    defaultCategory: 'conservas_aceites',
+    defaultUnit: 'g',
+    suggestedSubstitutes: [
+      'Nueces',
+      'Almendras',
+      'Cacahuetes',
+      'Anacardos',
+      'Semillas de sésamo',
+    ],
+  },
+] as const
+
+export const GENERIC_GROUP_META: Record<GenericIngredientGroup, GenericGroupMeta> =
+  Object.fromEntries(GENERIC_INGREDIENT_GROUPS.map((g) => [g.id, g])) as Record<
+    GenericIngredientGroup,
+    GenericGroupMeta
+  >
+
 export interface RecipeIngredient {
   id: string
   name: string
@@ -144,6 +404,10 @@ export interface RecipeIngredient {
   category: IngredientCategory
   /** Ingrediente opcional para mejorar o sofisticar la versión básica */
   optional?: boolean
+  /** Lista explícita de ingredientes sustitutos válidos (p. ej. ["Brócoli", "Setas", "Bimi"]) */
+  substitutes?: string[]
+  /** Familia genérica / comodín para recetas flexibles o de aprovechamiento */
+  genericGroup?: GenericIngredientGroup
 }
 
 export interface RecipeStep {

@@ -280,7 +280,7 @@ export function createSeedSnapshot(now: Date = new Date()): AppDataSnapshot {
       emoji: '🍝',
       tags: ['Comida', 'Pasta', 'Batch cooking'],
       ingredients: [
-        { id: 'ing-28', name: 'Espaguetis o macarrones', quantity: 400, unit: 'g', category: 'legumbres_cereales' },
+        { id: 'ing-28', name: 'Espaguetis', quantity: 400, unit: 'g', category: 'legumbres_cereales', genericGroup: 'pasta', substitutes: ['Macarrones', 'Tallarines', 'Hélices'] },
         { id: 'ing-29', name: 'Carne picada mixta', quantity: 500, unit: 'g', category: 'carnes_pescados' },
         { id: 'ing-30', name: 'Tomate triturado', quantity: 400, unit: 'g', category: 'conservas_aceites' },
         { id: 'ing-31', name: 'Zanahoria', quantity: 2, unit: 'ud', category: 'verduras_frutas' },
@@ -343,8 +343,8 @@ export function createSeedSnapshot(now: Date = new Date()): AppDataSnapshot {
         { id: 'ing-ms-11', name: 'Mozzarella rallada', quantity: 150, unit: 'g', category: 'lacteos_huevos', optional: true },
         { id: 'ing-ms-12', name: 'Queso parmesano rallado', quantity: 80, unit: 'g', category: 'lacteos_huevos', optional: true },
         { id: 'ing-ms-13', name: 'Hoja de laurel', quantity: 2, unit: 'ud', category: 'especias_salsas', optional: true },
-        { id: 'ing-ms-14', name: 'Demi-glace o pastilla de caldo', quantity: 1, unit: 'ud', category: 'especias_salsas', optional: true },
-        { id: 'ing-ms-15', name: 'Gochujang o picante', quantity: 1, unit: 'cucharadita', category: 'especias_salsas', optional: true },
+        { id: 'ing-ms-14', name: 'Demi-glace', quantity: 1, unit: 'ud', category: 'especias_salsas', optional: true, genericGroup: 'caldo', substitutes: ['Pastilla de caldo'] },
+        { id: 'ing-ms-15', name: 'Gochujang', quantity: 1, unit: 'cucharadita', category: 'especias_salsas', optional: true, genericGroup: 'picante', substitutes: ['Cayena', 'Tabasco', 'Sriracha', 'Chile en polvo'] },
         { id: 'ing-ms-16', name: 'Bicarbonato', quantity: 0.5, unit: 'cucharadita', category: 'especias_salsas', optional: true },
       ],
       steps: [
@@ -770,7 +770,7 @@ export function createSeedSnapshot(now: Date = new Date()): AppDataSnapshot {
         { id: 'ing-fj-15', name: 'Pimienta negra', quantity: 0, unit: 'al_gusto', category: 'especias_salsas' },
         { id: 'ing-fj-16', name: 'Sal', quantity: 0, unit: 'al_gusto', category: 'especias_salsas' },
         { id: 'ing-fj-17', name: 'Aguacate', quantity: 1, unit: 'ud', category: 'verduras_frutas', optional: true },
-        { id: 'ing-fj-18', name: 'Crema agria o yogur griego', quantity: 100, unit: 'g', category: 'lacteos_huevos', optional: true },
+        { id: 'ing-fj-18', name: 'Crema agria', quantity: 100, unit: 'g', category: 'lacteos_huevos', optional: true, genericGroup: 'lacteo_cremoso', substitutes: ['Yogur griego', 'Yogur natural'] },
         { id: 'ing-fj-19', name: 'Salsa mexicana', quantity: 100, unit: 'g', category: 'especias_salsas', optional: true },
         { id: 'ing-fj-20', name: 'Lima', quantity: 1, unit: 'ud', category: 'verduras_frutas', optional: true },
       ],
@@ -899,7 +899,7 @@ export function createSeedSnapshot(now: Date = new Date()): AppDataSnapshot {
       ingredients: [
         { id: 'ing-acd-1', name: 'Contramuslos de pollo', quantity: 400, unit: 'g', category: 'carnes_pescados' },
         { id: 'ing-acd-2', name: 'Arroz blanco', quantity: 160, unit: 'g', category: 'legumbres_cereales' },
-        { id: 'ing-acd-3', name: 'Espárragos verdes', quantity: 250, unit: 'g', category: 'verduras_frutas' },
+        { id: 'ing-acd-3', name: 'Espárragos verdes', quantity: 250, unit: 'g', category: 'verduras_frutas', genericGroup: 'verdura_guarnicion', substitutes: ['Brócoli', 'Setas', 'Bimi', 'Espinacas', 'Bok choy'] },
         { id: 'ing-acd-4', name: 'Caldo de pollo', quantity: 150, unit: 'ml', category: 'conservas_aceites' },
         { id: 'ing-acd-5', name: 'Limón', quantity: 0.5, unit: 'ud', category: 'verduras_frutas' },
         { id: 'ing-acd-6', name: 'Aceite de oliva virgen extra', quantity: 0, unit: 'al_gusto', category: 'conservas_aceites' },
@@ -996,8 +996,8 @@ export function createSeedSnapshot(now: Date = new Date()): AppDataSnapshot {
       ingredients: [
         { id: 'ing-ddn-1', name: 'Noodles', quantity: 200, unit: 'g', category: 'legumbres_cereales' },
         { id: 'ing-ddn-2', name: 'Carne picada', quantity: 250, unit: 'g', category: 'carnes_pescados' },
-        { id: 'ing-ddn-3', name: 'Cebolleta china', quantity: 3, unit: 'ud', category: 'verduras_frutas' },
-        { id: 'ing-ddn-4', name: 'Crema de cacahuete', quantity: 2, unit: 'cucharada', category: 'conservas_aceites' },
+        { id: 'ing-ddn-3', name: 'Cebolleta china', quantity: 3, unit: 'ud', category: 'verduras_frutas', substitutes: ['Ajetes', 'Cebolla'] },
+        { id: 'ing-ddn-4', name: 'Crema de cacahuete', quantity: 2, unit: 'cucharada', category: 'conservas_aceites', substitutes: ['Tahini'] },
         { id: 'ing-ddn-5', name: 'Salsa de soja', quantity: 1, unit: 'cucharada', category: 'especias_salsas' },
         { id: 'ing-ddn-6', name: 'Vinagre', quantity: 1, unit: 'cucharada', category: 'conservas_aceites' },
         { id: 'ing-ddn-7', name: 'Aceite de chile crujiente (Lao Gan Ma)', quantity: 1.5, unit: 'cucharada', category: 'especias_salsas' },
@@ -1107,7 +1107,7 @@ export function createSeedSnapshot(now: Date = new Date()): AppDataSnapshot {
         { id: 'ing-enh-11', name: 'Pimienta negra', quantity: 0, unit: 'al_gusto', category: 'especias_salsas' },
         { id: 'ing-enh-12', name: 'Sal', quantity: 0, unit: 'al_gusto', category: 'especias_salsas' },
         { id: 'ing-enh-13', name: 'Piparras encurtidas', quantity: 6, unit: 'ud', category: 'conservas_aceites', optional: true },
-        { id: 'ing-enh-14', name: 'Pollo, bacon o huevo duro', quantity: 150, unit: 'g', category: 'carnes_pescados', optional: true },
+        { id: 'ing-enh-14', name: 'Proteína al gusto', quantity: 150, unit: 'g', category: 'carnes_pescados', optional: true, genericGroup: 'proteina', substitutes: ['Pollo', 'Bacon', 'Huevo', 'Atún'] },
       ],
       steps: [
         {

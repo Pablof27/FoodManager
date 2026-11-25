@@ -7,26 +7,58 @@ import {
   Package,
   Plus,
   Search,
+  ShoppingCart,
+  Sparkles,
   Trash2,
   X,
 } from 'lucide-react'
 import { useMemo, useState, type FormEvent } from 'react'
 import { useFoodStore } from '../context/useFoodStore'
-import { formatUnitLabel, normalizeIngredientKey, UNIT_OPTIONS } from '../lib/units'
+import { getSuggestedPantryRestock, type ComputedShoppingItem } from '../lib/plannerEngine'
+import {
+  formatUnitLabel,
+  normalizeIngredientKey,
+  roundClean,
+  UNIT_OPTIONS,
+} from '../lib/units'
 import {
   CATEGORY_META,
   CATEGORY_ORDER,
+  type ExtraShoppingItem,
   type IngredientCategory,
   type PantryItem,
   type Unit,
 } from '../types/food'
 
-export function PantryView() {
+interface PantryViewProps {
+  onSearchRecipesByPantry?: () => void
+  onNavigateToShopping?: () => void
+}
+
+function getShoppingQuantityStep(unit: Unit, currentQty: number): number {
+  if (unit === 'g' || unit === 'ml') {
+    return currentQty < 250 ? 100 : 250
+  }
+  if (unit === 'kg' || unit === 'l') {
+    return currentQty < 1 ? 0.5 : 1
+  }
+  return 1
+}
+
+export function PantryView({
+  onSearchRecipesByPantry,
+  onNavigateToShopping,
+}: PantryViewProps = {}) {
   const {
     snapshot,
+    currentWeekPlan,
+    weekShopping,
     savePantryItem,
     adjustPantryQuantity,
     deletePantryItem,
+    addPantryItemsToShopping,
+    updateExtraShoppingItemQuantity,
+    removeExtraShoppingItem,
     knownIngredientSuggestions,
   } = useFoodStore()
 
@@ -41,6 +73,12 @@ export function PantryView() {
   const [filterCategory, setFilterCategory] = useState<IngredientCategory | 'todas'>('todas')
   const [onlyLowStock, setOnlyLowStock] = useState(false)
   const [editingItem, setEditingItem] = useState<PantryItem | null>(null)
+  const [toastMsg, setToastMsg] = useState<string | null>(null)
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg)
+    window.setTimeout(() => setToastMsg(null), 3500)
+  }
 
   const handleNameChange = (val: string) => {
     setName(val)
@@ -88,10 +126,63 @@ export function PantryView() {
     return false
   }
 
-  const lowStockCount = useMemo(
-    () => snapshot.pantry.filter(isLowStock).length,
+  const lowStockItems = useMemo(
+    () => snapshot.pantry.filter(isLowStock),
     [snapshot.pantry],
   )
+  const lowStockCount = lowStockItems.length
+
+  // Índice rápido de ítems pendientes esta semana en la cesta (manuales extra y calculados por recetas)
+  const uncheckedExtraByNorm = useMemo(() => {
+    const map = new Map<string, ExtraShoppingItem>()
+    for (const ext of currentWeekPlan.extraShoppingItems) {
+      if (ext.checked) continue
+      const norm = normalizeIngredientKey(ext.name)
+      if (norm && !map.has(norm)) {
+        map.set(norm, ext)
+      }
+    }
+    return map
+  }, [currentWeekPlan.extraShoppingItems])
+
+  const uncheckedRecipeBuyByNorm = useMemo(() => {
+    const map = new Map<string, ComputedShoppingItem>()
+    for (const item of weekShopping.toBuyItems) {
+      if (item.checked) continue
+      if (!map.has(item.normalizedName)) {
+        map.set(item.normalizedName, item)
+      }
+    }
+    return map
+  }, [weekShopping.toBuyItems])
+
+  const lowStockNotInCart = useMemo(
+    () =>
+      lowStockItems.filter((item) => {
+        const norm = normalizeIngredientKey(item.name)
+        return !uncheckedExtraByNorm.has(norm) && !uncheckedRecipeBuyByNorm.has(norm)
+      }),
+    [lowStockItems, uncheckedExtraByNorm, uncheckedRecipeBuyByNorm],
+  )
+
+  const handleQuickAddItemToCart = (item: PantryItem) => {
+    const suggested = getSuggestedPantryRestock(item)
+    addPantryItemsToShopping([item])
+    showToast(
+      `Añadido «${item.name}» (${suggested.formatted}) a la cesta de la compra.`,
+    )
+  }
+
+  const handleBulkAddLowStockToCart = () => {
+    const count = addPantryItemsToShopping(lowStockNotInCart)
+    if (count > 0) {
+      showToast(
+        count === 1
+          ? 'Se ha añadido 1 producto con poco stock a la cesta de la compra.'
+          : `Se han añadido ${count} productos con poco stock a la cesta de la compra.`,
+      )
+    }
+  }
 
   const filteredItems = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -113,16 +204,32 @@ export function PantryView() {
 
   return (
     <div className="space-y-6">
+      {toastMsg && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-300 bg-emerald-900 px-4 py-3 text-sm font-medium text-white shadow-lg">
+          <span>{toastMsg}</span>
+          {onNavigateToShopping && (
+            <button
+              type="button"
+              onClick={onNavigateToShopping}
+              className="inline-flex items-center gap-1 rounded-lg bg-white/15 px-3 py-1 text-xs font-semibold hover:bg-white/25"
+            >
+              <ShoppingCart className="h-3.5 w-3.5" />
+              Ver cesta de la compra →
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Cabecera */}
       <div className="flex flex-col justify-between gap-4 rounded-2xl border border-stone-200 bg-white p-5 shadow-2xs sm:flex-row sm:items-center">
         <div>
           <h2 className="text-xl font-bold text-stone-900">Mi Despensa e Inventario</h2>
           <p className="mt-0.5 text-sm text-stone-500">
-            Lo que tengas aquí se descuenta automáticamente al calcular la lista de la compra semanal.
+            Controla qué tienes en casa y envía en un clic a la cesta lo que esté agotado o con pocas unidades.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="rounded-xl bg-stone-100 px-3 py-1.5 font-semibold text-stone-700">
             {snapshot.pantry.length} productos en casa
           </span>
@@ -138,6 +245,27 @@ export function PantryView() {
             >
               <AlertCircle className="h-3.5 w-3.5" />
               {lowStockCount} con poco stock
+            </button>
+          )}
+          {lowStockNotInCart.length > 0 && (
+            <button
+              type="button"
+              onClick={handleBulkAddLowStockToCart}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-1.5 font-semibold text-amber-950 transition hover:bg-amber-100"
+              title="Añadir todos los productos agotados o bajo mínimo a la cesta de la compra"
+            >
+              <ShoppingCart className="h-3.5 w-3.5 text-amber-800" />
+              Reponer poco stock ({lowStockNotInCart.length})
+            </button>
+          )}
+          {onSearchRecipesByPantry && snapshot.pantry.length > 0 && (
+            <button
+              type="button"
+              onClick={onSearchRecipesByPantry}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-700 px-3.5 py-1.5 font-semibold text-white shadow-2xs transition hover:bg-emerald-800"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Buscar recetas con mi despensa →
             </button>
           )}
         </div>
@@ -315,6 +443,10 @@ export function PantryView() {
                 {group.items.map((item) => {
                   const low = isLowStock(item)
                   const isEditing = editingItem?.id === item.id
+                  const itemNorm = normalizeIngredientKey(item.name)
+                  const extraInCart = uncheckedExtraByNorm.get(itemNorm)
+                  const recipeBuyInCart = uncheckedRecipeBuyByNorm.get(itemNorm)
+                  const suggestedRestock = getSuggestedPantryRestock(item)
 
                   if (isEditing && editingItem) {
                     return (
@@ -384,6 +516,30 @@ export function PantryView() {
                             </button>
                           </div>
                         </div>
+                        {!editingItem.alwaysAvailable && editingItem.unit !== 'al_gusto' && (
+                          <div className="mt-2 flex items-center gap-2 text-xs text-stone-600">
+                            <span>Avisar poco stock debajo de:</span>
+                            <input
+                              type="number"
+                              min={0}
+                              step="any"
+                              value={editingItem.minQuantity ?? ''}
+                              onChange={(e) => {
+                                const raw = e.target.value.trim()
+                                const parsed = Number(raw)
+                                setEditingItem({
+                                  ...editingItem,
+                                  minQuantity:
+                                    raw && Number.isFinite(parsed) && parsed > 0
+                                      ? parsed
+                                      : undefined,
+                                })
+                              }}
+                              placeholder="Sin mínimo"
+                              className="w-24 rounded-lg border border-stone-300 bg-white px-2 py-1 text-xs"
+                            />
+                          </div>
+                        )}
                       </li>
                     )
                   }
@@ -391,7 +547,7 @@ export function PantryView() {
                   return (
                     <li
                       key={item.id}
-                      className={`flex items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 ${
+                      className={`flex flex-wrap items-center justify-between gap-2.5 rounded-xl border px-3.5 py-2.5 ${
                         low
                           ? 'border-amber-200 bg-amber-50/40'
                           : 'border-stone-200 bg-stone-50/40'
@@ -415,7 +571,100 @@ export function PantryView() {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {/* Acción rápida: añadir o ajustar en la cesta de la compra */}
+                        {extraInCart ? (
+                          extraInCart.unit === 'al_gusto' ? (
+                            <span className="inline-flex items-center gap-1 rounded-xl border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-900">
+                              <ShoppingCart className="h-3 w-3 text-emerald-700" />
+                              <span>En cesta</span>
+                              <button
+                                type="button"
+                                onClick={() => removeExtraShoppingItem(extraInCart.id)}
+                                className="ml-0.5 rounded p-0.5 text-emerald-700 hover:bg-emerald-200/70"
+                                title="Quitar de la cesta"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </span>
+                          ) : (
+                            <div
+                              className="inline-flex items-center rounded-xl border border-emerald-300 bg-emerald-50 p-0.5"
+                              title="En la cesta de la compra de esta semana · Ajusta la cantidad a comprar"
+                            >
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const step = getShoppingQuantityStep(
+                                    extraInCart.unit,
+                                    extraInCart.quantity,
+                                  )
+                                  updateExtraShoppingItemQuantity(
+                                    extraInCart.id,
+                                    roundClean(extraInCart.quantity - step),
+                                  )
+                                }}
+                                className="flex h-6 w-6 items-center justify-center rounded-lg text-emerald-800 hover:bg-emerald-200/70"
+                                title="Reducir o quitar de la cesta"
+                              >
+                                <Minus className="h-3 w-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={onNavigateToShopping}
+                                className="inline-flex items-center gap-1 px-2 text-xs font-bold text-emerald-950 hover:underline"
+                                title="Ver en la cesta de la compra"
+                              >
+                                <ShoppingCart className="h-3 w-3 text-emerald-700" />
+                                {formatUnitLabel(extraInCart.quantity, extraInCart.unit)}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const step = getShoppingQuantityStep(
+                                    extraInCart.unit,
+                                    extraInCart.quantity,
+                                  )
+                                  updateExtraShoppingItemQuantity(
+                                    extraInCart.id,
+                                    roundClean(extraInCart.quantity + step),
+                                  )
+                                }}
+                                className="flex h-6 w-6 items-center justify-center rounded-lg text-emerald-800 hover:bg-emerald-200/70"
+                                title="Sumar más cantidad a la cesta"
+                              >
+                                <Plus className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )
+                        ) : recipeBuyInCart ? (
+                          <button
+                            type="button"
+                            onClick={() => handleQuickAddItemToCart(item)}
+                            className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50/80 px-2.5 py-1 text-xs font-semibold text-emerald-900 transition hover:bg-emerald-100"
+                            title={`Ya tienes ${recipeBuyInCart.netFormatted} en la lista de recetas de esta semana · Pulsa para sumar ${suggestedRestock.formatted} extra`}
+                          >
+                            <ShoppingCart className="h-3 w-3 text-emerald-700" />
+                            <span>En lista ({recipeBuyInCart.netFormatted})</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleQuickAddItemToCart(item)}
+                            className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-1 text-xs font-semibold transition ${
+                              low
+                                ? 'border-amber-400 bg-amber-500/20 text-amber-950 hover:bg-amber-500/30'
+                                : 'border-stone-200 bg-white text-stone-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-900'
+                            }`}
+                            title={`Añadir ${suggestedRestock.formatted} de ${item.name} a la cesta de la compra`}
+                          >
+                            <ShoppingCart className="h-3 w-3" />
+                            <span>
+                              {low ? `+ Cesta (${suggestedRestock.formatted})` : '+ Cesta'}
+                            </span>
+                          </button>
+                        )}
+
                         {item.alwaysAvailable ? (
                           <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
                             <InfinityIcon className="h-3.5 w-3.5" />

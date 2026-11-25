@@ -1,14 +1,18 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { describe, expect, it } from 'vitest'
 import { sanitizeRecipe } from '../../storage/db'
 import {
   assembleSnapshotFromDbRows,
   computeRelationalSyncDiff,
+  fetchUserCloudSnapshot,
+  formatSupabaseError,
 } from '../../storage/supabaseSync'
 import type { AppDataSnapshot, PantryItem, Recipe } from '../../types/food'
 import {
   computeWeekRecipeSummaries,
   computeWeekShoppingList,
   createEmptyWeekPlan,
+  getSuggestedPantryRestock,
 } from '../plannerEngine'
 import { normalizeIngredientKey } from '../units'
 
@@ -183,6 +187,45 @@ describe('computeWeekShoppingList', () => {
       withoutOptionals.coveredByPantryItems.some((i) => i.normalizedName === 'patata'),
     ).toBe(true)
   })
+
+  it('sugiere cantidades razonables de reposición desde la despensa según minQuantity o unidad', () => {
+    // Con minQuantity definido y stock inferior -> sugiere la diferencia exacta hasta el mínimo
+    expect(
+      getSuggestedPantryRestock({
+        id: 'p1',
+        name: 'Arroz redondo',
+        quantity: 100,
+        unit: 'g',
+        category: 'legumbres_cereales',
+        minQuantity: 300,
+        updatedAt: '2026-11-25T00:00:00Z',
+      }),
+    ).toEqual({ quantity: 200, unit: 'g', formatted: '200 g' })
+
+    // Sin minQuantity en gramos -> sugiere paquete estándar (500 g) en lugar de 1 g
+    expect(
+      getSuggestedPantryRestock({
+        id: 'p2',
+        name: 'Macarrones',
+        quantity: 0,
+        unit: 'g',
+        category: 'legumbres_cereales',
+        updatedAt: '2026-11-25T00:00:00Z',
+      }),
+    ).toEqual({ quantity: 500, unit: 'g', formatted: '500 g' })
+
+    // Huevos por unidades sin mínimo -> sugiere media docena (6 uds)
+    expect(
+      getSuggestedPantryRestock({
+        id: 'p3',
+        name: 'Huevos',
+        quantity: 1,
+        unit: 'ud',
+        category: 'lacteos_huevos',
+        updatedAt: '2026-11-25T00:00:00Z',
+      }),
+    ).toEqual({ quantity: 6, unit: 'ud', formatted: '6 uds' })
+  })
 })
 
 describe('sanitizeRecipe migration', () => {
@@ -286,5 +329,53 @@ describe('supabaseSync relational mapping & diff', () => {
     expect(deleteDiff.weekPlansToUpsert).toHaveLength(0)
     expect(deleteDiff.pantryToUpsert).toHaveLength(0)
     expect(deleteDiff.settingsToUpsert).toBeNull()
+  })
+
+  it('convierte errores planos de PostgREST (42501 / PGRST205) en instancias Error descriptivas', async () => {
+    const permissionDenied = {
+      code: '42501',
+      message: 'permission denied for table recipes',
+      details: null,
+      hint: 'Grant the required privileges to the current role',
+    }
+
+    expect(formatSupabaseError(permissionDenied)).toContain('Permiso denegado')
+    expect(formatSupabaseError(permissionDenied)).toContain('supabase/schema.sql')
+
+    const mockClient = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            order: () => Promise.resolve({ data: null, error: permissionDenied }),
+            maybeSingle: () => Promise.resolve({ data: null, error: null }),
+            then: (resolve: (v: unknown) => unknown) =>
+              Promise.resolve({ data: [], error: null }).then(resolve),
+          }),
+        }),
+      }),
+    } as unknown as SupabaseClient
+
+    await expect(fetchUserCloudSnapshot(mockClient, 'user-123')).rejects.toThrow(
+      /Permiso denegado en Supabase/,
+    )
+  })
+
+  it('detecta respuestas vacías (404 silencioso con Data API desactivada) en fetchUserCloudSnapshot', async () => {
+    const mockDisabledApiClient = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            order: () => Promise.resolve({ data: null, error: null, status: 204 }),
+            maybeSingle: () => Promise.resolve({ data: null, error: null, status: 204 }),
+            then: (resolve: (v: unknown) => unknown) =>
+              Promise.resolve({ data: null, error: null, status: 204 }).then(resolve),
+          }),
+        }),
+      }),
+    } as unknown as SupabaseClient
+
+    await expect(fetchUserCloudSnapshot(mockDisabledApiClient, 'user-123')).rejects.toThrow(
+      /Data API de Supabase/,
+    )
   })
 })

@@ -133,8 +133,9 @@ export function ShoppingView() {
       lines.push(`${sec.meta.emoji} ${sec.meta.label.toUpperCase()}`)
       for (const item of sec.computed) {
         const optSuffix = item.isPurelyOptional ? ' (opcional)' : ''
+        const flexSuffix = item.substituteHint ? ` [${item.substituteHint}]` : ''
         lines.push(
-          `- [${item.checked ? 'x' : ' '}] ${item.displayName}${optSuffix}: ${item.netFormatted}`,
+          `- [${item.checked ? 'x' : ' '}] ${item.displayName}${optSuffix}: ${item.netFormatted}${flexSuffix}`,
         )
       }
       for (const ext of sec.extras) {
@@ -469,6 +470,12 @@ export function ShoppingView() {
                             </p>
                           )}
 
+                          {item.substituteHint && (
+                            <p className="mt-1 text-[11px] font-medium text-teal-800">
+                              ⇄ {item.substituteHint}
+                            </p>
+                          )}
+
                           {/* Fuentes por receta y lote */}
                           <p className="mt-1 text-[11px] text-stone-500">
                             {item.sources
@@ -608,7 +615,10 @@ export function ShoppingView() {
                     </div>
                     <span className="rounded-lg bg-emerald-100 px-2 py-1 font-semibold text-emerald-900">
                       {item.coveredByAlwaysAvailable
-                        ? 'Básico en casa'
+                        ? item.pantryDeductedFormatted &&
+                          item.pantryDeductedFormatted !== 'Básico en despensa'
+                          ? item.pantryDeductedFormatted
+                          : 'Básico en casa'
                         : `Tienes ${item.pantryDeductedFormatted}`}
                     </span>
                   </li>
