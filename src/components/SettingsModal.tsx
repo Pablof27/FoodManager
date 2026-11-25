@@ -1,13 +1,16 @@
-import { Download, RotateCcw, Trash2, Upload, X } from 'lucide-react'
+import { Cloud, Download, RotateCcw, Trash2, Upload, X } from 'lucide-react'
 import { useRef, useState, type ChangeEvent } from 'react'
+import { useAuth } from '../context/useAuth'
 import { useFoodStore } from '../context/useFoodStore'
 import { ALL_MEAL_SLOTS } from '../types/food'
 
 interface SettingsModalProps {
   onClose: () => void
+  onOpenAuth?: () => void
 }
 
-export function SettingsModal({ onClose }: SettingsModalProps) {
+export function SettingsModal({ onClose, onOpenAuth }: SettingsModalProps) {
+  const { user, profile } = useAuth()
   const {
     snapshot,
     toggleMealSlot,
@@ -59,7 +62,9 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
           <div>
             <h2 className="text-lg font-bold text-stone-900">Preferencias y Datos</h2>
             <p className="text-xs text-stone-500">
-              Guardado local automático en el navegador (IndexedDB).
+              {user && profile
+                ? `Sincronizando en Supabase (${profile.email})`
+                : 'Modo local activo en este dispositivo.'}
             </p>
           </div>
           <button
@@ -75,6 +80,31 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
           {statusMessage && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-900">
               {statusMessage}
+            </div>
+          )}
+
+          {onOpenAuth && (
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3.5">
+              <div className="flex items-center gap-2.5">
+                <Cloud className="h-4.5 w-4.5 shrink-0 text-emerald-700" />
+                <div>
+                  <p className="text-xs font-bold text-stone-900">
+                    {user && profile ? `Conectado como ${profile.fullName}` : 'Modo sin cuenta (local)'}
+                  </p>
+                  <p className="text-[11px] text-stone-600">
+                    {user
+                      ? 'Tus datos se sincronizan en tus dispositivos.'
+                      : 'Inicia sesión con Google para sincronizar móvil y PC.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onOpenAuth}
+                className="shrink-0 rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
+              >
+                {user ? 'Ver cuenta' : 'Entrar'}
+              </button>
             </div>
           )}
 

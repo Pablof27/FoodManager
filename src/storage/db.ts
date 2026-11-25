@@ -12,6 +12,7 @@ const DB_VERSION = 1
 const STORE_NAME = 'snapshots'
 const SNAPSHOT_KEY = 'current'
 const LOCAL_STORAGE_FALLBACK_KEY = 'foodmanager_snapshot_v1'
+const USER_LOCAL_STORAGE_PREFIX = 'foodmanager_snapshot_user_'
 const SNAPSHOT_API_ENDPOINT = '/api/snapshot'
 
 function sanitizeNotesList(rawNotes: unknown, idPrefix: string): RecipeNote[] {
@@ -159,9 +160,13 @@ export function sanitizeSnapshot(raw: Partial<AppDataSnapshot> | null | undefine
   }
 }
 
-async function persistBrowserStores(snapshot: AppDataSnapshot): Promise<void> {
+async function persistBrowserStores(
+  snapshot: AppDataSnapshot,
+  idbKey = SNAPSHOT_KEY,
+  lsKey = LOCAL_STORAGE_FALLBACK_KEY,
+): Promise<void> {
   try {
-    localStorage.setItem(LOCAL_STORAGE_FALLBACK_KEY, JSON.stringify(snapshot))
+    localStorage.setItem(lsKey, JSON.stringify(snapshot))
   } catch {
     // Ignorar cuotas de localStorage si aplica
   }
@@ -171,7 +176,7 @@ async function persistBrowserStores(snapshot: AppDataSnapshot): Promise<void> {
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readwrite')
       const store = tx.objectStore(STORE_NAME)
-      store.put(snapshot, SNAPSHOT_KEY)
+      store.put(snapshot, idbKey)
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)
     })
@@ -179,6 +184,50 @@ async function persistBrowserStores(snapshot: AppDataSnapshot): Promise<void> {
   } catch {
     // Guardado ya respaldado en localStorage
   }
+}
+
+export async function loadUserCachedSnapshot(userId: string): Promise<AppDataSnapshot | null> {
+  const idbKey = `user:${userId}`
+  const lsKey = `${USER_LOCAL_STORAGE_PREFIX}${userId}`
+
+  try {
+    const db = await openDatabase()
+    const stored = await new Promise<AppDataSnapshot | undefined>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readonly')
+      const store = tx.objectStore(STORE_NAME)
+      const req = store.get(idbKey)
+      req.onsuccess = () => resolve(req.result as AppDataSnapshot | undefined)
+      req.onerror = () => reject(req.error)
+    })
+    db.close()
+    if (stored) {
+      return sanitizeSnapshot(stored)
+    }
+  } catch {
+    // Fallback a localStorage
+  }
+
+  try {
+    const raw = localStorage.getItem(lsKey)
+    if (raw) {
+      return sanitizeSnapshot(JSON.parse(raw) as Partial<AppDataSnapshot>)
+    }
+  } catch {
+    // Ignorar caché inválida
+  }
+
+  return null
+}
+
+export async function saveUserCachedSnapshot(
+  userId: string,
+  snapshot: AppDataSnapshot,
+): Promise<void> {
+  await persistBrowserStores(
+    snapshot,
+    `user:${userId}`,
+    `${USER_LOCAL_STORAGE_PREFIX}${userId}`,
+  )
 }
 
 async function loadDiskSnapshot(): Promise<

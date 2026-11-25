@@ -1,26 +1,40 @@
 import {
+  AlertTriangle,
   BookOpen,
   CalendarDays,
+  Cloud,
   Package,
   Settings,
   ShoppingCart,
   UtensilsCrossed,
 } from 'lucide-react'
 import { useState } from 'react'
+import { AuthModal } from './components/AuthModal'
 import { PantryView } from './components/PantryView'
 import { PlannerView } from './components/PlannerView'
 import { RecipesView } from './components/RecipesView'
 import { SettingsModal } from './components/SettingsModal'
 import { ShoppingView } from './components/ShoppingView'
+import { AuthProvider } from './context/AuthContext'
 import { FoodStoreProvider } from './context/FoodStoreContext'
+import { useAuth } from './context/useAuth'
 import { useFoodStore } from './context/useFoodStore'
 
 type ActiveTab = 'planner' | 'shopping' | 'recipes' | 'pantry'
 
 function FoodManagerShell() {
-  const { snapshot, currentWeekPlan, weekShopping, isHydrated } = useFoodStore()
+  const { user, profile } = useAuth()
+  const {
+    snapshot,
+    currentWeekPlan,
+    weekShopping,
+    isHydrated,
+    cloudSyncStatus,
+    cloudSyncError,
+  } = useFoodStore()
   const [activeTab, setActiveTab] = useState<ActiveTab>('planner')
   const [showSettings, setShowSettings] = useState(false)
+  const [showAuth, setShowAuth] = useState(false)
 
   const pendingShoppingCount =
     weekShopping.toBuyItems.filter((i) => !i.checked).length +
@@ -111,17 +125,97 @@ function FoodManagerShell() {
             </button>
           </nav>
 
-          <button
-            type="button"
-            onClick={() => setShowSettings(true)}
-            className="order-2 inline-flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50 md:order-3"
-            title="Preferencias y copias de seguridad"
-          >
-            <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline">Ajustes</span>
-          </button>
+          <div className="order-2 flex items-center gap-2 md:order-3">
+            <button
+              type="button"
+              onClick={() => setShowAuth(true)}
+              className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+                user
+                  ? 'border-stone-200 bg-white text-stone-800 hover:bg-stone-50'
+                  : 'border-emerald-200 bg-emerald-50/80 text-emerald-900 hover:bg-emerald-100/80'
+              }`}
+              title={
+                user && profile
+                  ? `Conectado como ${profile.email}`
+                  : 'Iniciar sesión con Google para sincronizar dispositivos'
+              }
+            >
+              {user && profile ? (
+                <>
+                  {profile.avatarUrl ? (
+                    <img
+                      src={profile.avatarUrl}
+                      alt={profile.fullName}
+                      referrerPolicy="no-referrer"
+                      className="h-5 w-5 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-700 text-[10px] font-bold text-white">
+                      {profile.fullName.slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="hidden max-w-28 truncate sm:inline">
+                    {profile.fullName.split(' ')[0]}
+                  </span>
+                  <span
+                    className={`h-2 w-2 rounded-full ${
+                      cloudSyncStatus === 'synced'
+                        ? 'bg-emerald-500'
+                        : cloudSyncStatus === 'syncing'
+                          ? 'animate-pulse bg-amber-500'
+                          : 'bg-rose-500'
+                    }`}
+                    title={
+                      cloudSyncStatus === 'synced'
+                        ? 'Sincronizado en la nube'
+                        : cloudSyncStatus === 'syncing'
+                          ? 'Sincronizando…'
+                          : 'Error de sincronización'
+                    }
+                  />
+                </>
+              ) : (
+                <>
+                  <Cloud className="h-4 w-4 text-emerald-700" />
+                  <span>Entrar</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowSettings(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50"
+              title="Preferencias y copias de seguridad"
+            >
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Ajustes</span>
+            </button>
+          </div>
         </div>
       </header>
+
+      {/* Aviso si falla sincronización con Supabase */}
+      {user && cloudSyncError && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-2">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 text-xs text-amber-950">
+            <span className="inline-flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-700" />
+              <span>
+                No se pudo sincronizar con Supabase ({cloudSyncError}). Tus cambios están guardados
+                en caché local.
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowAuth(true)}
+              className="font-semibold text-amber-900 underline"
+            >
+              Revisar cuenta
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Contenido principal */}
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
@@ -141,15 +235,26 @@ function FoodManagerShell() {
         )}
       </main>
 
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+          onOpenAuth={() => {
+            setShowSettings(false)
+            setShowAuth(true)
+          }}
+        />
+      )}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
     </div>
   )
 }
 
 export default function App() {
   return (
-    <FoodStoreProvider>
-      <FoodManagerShell />
-    </FoodStoreProvider>
+    <AuthProvider>
+      <FoodStoreProvider>
+        <FoodManagerShell />
+      </FoodStoreProvider>
+    </AuthProvider>
   )
 }

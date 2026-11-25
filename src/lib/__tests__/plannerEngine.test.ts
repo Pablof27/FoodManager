@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { sanitizeRecipe } from '../../storage/db'
-import type { PantryItem, Recipe } from '../../types/food'
+import {
+  assembleSnapshotFromDbRows,
+  computeRelationalSyncDiff,
+} from '../../storage/supabaseSync'
+import type { AppDataSnapshot, PantryItem, Recipe } from '../../types/food'
 import {
   computeWeekRecipeSummaries,
   computeWeekShoppingList,
@@ -207,5 +211,80 @@ describe('sanitizeRecipe migration', () => {
         text: 'Usar sartén antiadherente caliente.',
       }),
     ])
+  })
+})
+
+describe('supabaseSync relational mapping & diff', () => {
+  const baseSnapshot: AppDataSnapshot = {
+    version: 2,
+    recipes: sampleRecipes,
+    weekPlans: {
+      '2026-11-23': {
+        weekStart: '2026-11-23',
+        entries: [{ id: 'e1', day: 0, slot: 'comida', recipeId: 'r-lentejas', servings: 2 }],
+        batchOverrides: {},
+        checkedShoppingKeys: ['patata::mass'],
+        addedToPantryKeys: [],
+        extraShoppingItems: [],
+      },
+    },
+    pantry: [
+      {
+        id: 'p1',
+        name: 'Sal',
+        quantity: 0,
+        unit: 'al_gusto',
+        category: 'especias_salsas',
+        alwaysAvailable: true,
+        updatedAt: '2026-11-24T00:00:00Z',
+      },
+    ],
+    settings: {
+      enabledSlots: ['comida', 'cena'],
+      defaultServingsPerMeal: 2,
+      deductPantryInShopping: true,
+      includeOptionalInShopping: true,
+    },
+  }
+
+  it('reconstruye un snapshot idéntico desde filas relacionales y detecta solo cambios reales en el diff', () => {
+    const userId = 'user-123'
+    const initialDiff = computeRelationalSyncDiff(userId, null, baseSnapshot, '2026-11-24T12:00:00Z')
+
+    expect(initialDiff.hasChanges).toBe(true)
+    expect(initialDiff.recipesToUpsert).toHaveLength(2)
+    expect(initialDiff.weekPlansToUpsert).toHaveLength(1)
+    expect(initialDiff.pantryToUpsert).toHaveLength(1)
+    expect(initialDiff.settingsToUpsert?.user_id).toBe(userId)
+
+    const reassembled = assembleSnapshotFromDbRows({
+      recipesRows: initialDiff.recipesToUpsert,
+      weekPlansRows: initialDiff.weekPlansToUpsert,
+      pantryRows: initialDiff.pantryToUpsert,
+      settingsRow: initialDiff.settingsToUpsert,
+    })
+
+    expect(reassembled.hasCloudData).toBe(true)
+    expect(reassembled.snapshot.recipes.map((r) => r.id)).toEqual(['r-lentejas', 'r-pollo'])
+    expect(reassembled.snapshot.weekPlans['2026-11-23'].checkedShoppingKeys).toEqual([
+      'patata::mass',
+    ])
+
+    // Sin cambios no debe emitir operaciones de red
+    const noOpDiff = computeRelationalSyncDiff(userId, reassembled.snapshot, reassembled.snapshot)
+    expect(noOpDiff.hasChanges).toBe(false)
+
+    // Al borrar 1 receta y reordenar/editar nada más, solo marca ese borrado y el nuevo orden
+    const afterDelete: AppDataSnapshot = {
+      ...reassembled.snapshot,
+      recipes: [reassembled.snapshot.recipes[1]],
+    }
+    const deleteDiff = computeRelationalSyncDiff(userId, reassembled.snapshot, afterDelete)
+    expect(deleteDiff.recipeIdsToDelete).toEqual(['r-lentejas'])
+    expect(deleteDiff.recipesToUpsert).toHaveLength(1)
+    expect(deleteDiff.recipesToUpsert[0]).toMatchObject({ id: 'r-pollo', position: 0 })
+    expect(deleteDiff.weekPlansToUpsert).toHaveLength(0)
+    expect(deleteDiff.pantryToUpsert).toHaveLength(0)
+    expect(deleteDiff.settingsToUpsert).toBeNull()
   })
 })

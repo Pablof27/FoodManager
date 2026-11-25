@@ -12,9 +12,16 @@ import type {
   WeekPlan,
 } from '../types/food'
 
+export type CloudSyncStatus = 'local' | 'syncing' | 'synced' | 'error'
+
 export interface FoodStoreContextValue {
   isHydrated: boolean
   snapshot: AppDataSnapshot
+  cloudSyncStatus: CloudSyncStatus
+  cloudSyncError: string | null
+  lastSyncedAt: string | null
+  refreshFromCloud: () => Promise<void>
+  importLocalGuestDataToCloud: () => Promise<void>
   activeWeekStart: string
   setActiveWeekStart: (mondayIso: string) => void
   goToWeekOffset: (deltaWeeks: number) => void

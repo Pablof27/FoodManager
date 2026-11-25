@@ -13,6 +13,7 @@ import {
   computeWeekShoppingList,
   createEmptyWeekPlan,
 } from '../lib/plannerEngine'
+import { getSupabaseClient } from '../lib/supabase'
 import {
   getUnitFamily,
   mergeBaseIntoUnit,
@@ -20,7 +21,19 @@ import {
   roundClean,
   toBaseQuantity,
 } from '../lib/units'
-import { loadAppSnapshot, sanitizeSnapshot, saveAppSnapshot } from '../storage/db'
+import {
+  loadAppSnapshot,
+  loadUserCachedSnapshot,
+  sanitizeSnapshot,
+  saveAppSnapshot,
+  saveUserCachedSnapshot,
+} from '../storage/db'
+import {
+  applyRelationalDiffToSupabase,
+  computeRelationalSyncDiff,
+  fetchUserCloudSnapshot,
+  replaceAllUserCloudData,
+} from '../storage/supabaseSync'
 import {
   ALL_MEAL_SLOTS,
   type AppDataSnapshot,
@@ -34,38 +47,302 @@ import {
   type UserSettings,
   type WeekPlan,
 } from '../types/food'
-import { FoodStoreContext, type FoodStoreContextValue } from './useFoodStore'
+import { useAuth } from './useAuth'
+import {
+  FoodStoreContext,
+  type CloudSyncStatus,
+  type FoodStoreContextValue,
+} from './useFoodStore'
 
 function makeId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
 }
 
 export function FoodStoreProvider({ children }: { children: ReactNode }) {
-  const [isHydrated, setIsHydrated] = useState(false)
+  const { user, isAuthLoading } = useAuth()
+  const activeUserId = user?.id ?? null
+  const targetScope = isAuthLoading ? null : activeUserId ? `user:${activeUserId}` : 'guest'
+
+  const [hydratedScope, setHydratedScope] = useState<string | null>(null)
   const [snapshot, setSnapshot] = useState<AppDataSnapshot>(() => createSeedSnapshot())
   const [activeWeekStart, setActiveWeekStart] = useState<string>(() => getMondayIso())
-  const skipInitialSaveRef = useRef(true)
+  const [rawCloudSyncStatus, setCloudSyncStatus] = useState<CloudSyncStatus>('syncing')
+  const [rawCloudSyncError, setCloudSyncError] = useState<string | null>(null)
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
+
+  const isHydrated = targetScope !== null && hydratedScope === targetScope
+  const cloudSyncStatus: CloudSyncStatus = !activeUserId
+    ? 'local'
+    : !isHydrated
+      ? 'syncing'
+      : rawCloudSyncStatus
+  const cloudSyncError = !activeUserId || !isHydrated ? null : rawCloudSyncError
+
+  const hydratedScopeRef = useRef<string | null>(null)
+  const lastLoadedRef = useRef<AppDataSnapshot | null>(null)
+  const lastSyncedCloudRef = useRef<AppDataSnapshot | null>(null)
+  const latestSnapshotRef = useRef<AppDataSnapshot>(snapshot)
+  const hasPendingCloudWriteRef = useRef(false)
+  const lastLocalPushEndedAtRef = useRef(0)
+  const syncChainRef = useRef<Promise<void>>(Promise.resolve())
 
   useEffect(() => {
+    latestSnapshotRef.current = snapshot
+  }, [snapshot])
+
+  // Hidratación inicial o cambio de usuario (Modo local <-> Cuenta Google en Supabase)
+  useEffect(() => {
+    if (!targetScope) {
+      return
+    }
+
     let mounted = true
-    loadAppSnapshot().then((loaded) => {
-      if (!mounted) return
-      setSnapshot(loaded)
-      setIsHydrated(true)
-    })
+    hydratedScopeRef.current = null
+    hasPendingCloudWriteRef.current = false
+
+    if (!activeUserId) {
+      lastSyncedCloudRef.current = null
+
+      loadAppSnapshot().then((loaded) => {
+        if (!mounted) return
+        lastLoadedRef.current = loaded
+        hydratedScopeRef.current = targetScope
+        setSnapshot(loaded)
+        setLastSyncedAt(null)
+        setCloudSyncError(null)
+        setHydratedScope(targetScope)
+      })
+
+      return () => {
+        mounted = false
+      }
+    }
+
+    void (async () => {
+      const client = getSupabaseClient()
+      if (!client) {
+        if (!mounted) return
+        setCloudSyncStatus('error')
+        setCloudSyncError('Cliente de Supabase no configurado.')
+        hydratedScopeRef.current = targetScope
+        setHydratedScope(targetScope)
+        return
+      }
+
+      try {
+        const remote = await fetchUserCloudSnapshot(client, activeUserId)
+        if (!mounted) return
+
+        let resolvedSnapshot: AppDataSnapshot
+        if (remote.hasCloudData) {
+          resolvedSnapshot = remote.snapshot
+        } else {
+          // Cuenta recién estrenada en Supabase: inicializamos con sus datos locales actuales
+          resolvedSnapshot = await loadAppSnapshot()
+          await replaceAllUserCloudData(client, activeUserId, resolvedSnapshot)
+        }
+
+        if (!mounted) return
+        await saveUserCachedSnapshot(activeUserId, resolvedSnapshot)
+        lastSyncedCloudRef.current = resolvedSnapshot
+        lastLoadedRef.current = resolvedSnapshot
+        hydratedScopeRef.current = targetScope
+        setSnapshot(resolvedSnapshot)
+        setCloudSyncStatus('synced')
+        setCloudSyncError(null)
+        setLastSyncedAt(new Date().toISOString())
+        setHydratedScope(targetScope)
+      } catch (err: unknown) {
+        if (!mounted) return
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'No se pudo conectar con Supabase. Mostrando caché local.'
+        const cached = (await loadUserCachedSnapshot(activeUserId)) ?? createSeedSnapshot()
+        if (!mounted) return
+        lastSyncedCloudRef.current = null
+        lastLoadedRef.current = cached
+        hydratedScopeRef.current = targetScope
+        setSnapshot(cached)
+        setCloudSyncStatus('error')
+        setCloudSyncError(message)
+        setHydratedScope(targetScope)
+      }
+    })()
+
     return () => {
       mounted = false
     }
-  }, [])
+  }, [targetScope, activeUserId])
 
+  const pushLatestToCloud = useCallback(
+    (userId: string, snapToPush: AppDataSnapshot) => {
+      const client = getSupabaseClient()
+      if (!client) return
+
+      setCloudSyncStatus('syncing')
+      syncChainRef.current = syncChainRef.current
+        .catch(() => undefined)
+        .then(async () => {
+          const diff = computeRelationalSyncDiff(
+            userId,
+            lastSyncedCloudRef.current,
+            snapToPush,
+          )
+          if (diff.hasChanges) {
+            await applyRelationalDiffToSupabase(client, userId, diff)
+          }
+          lastSyncedCloudRef.current = snapToPush
+          lastLocalPushEndedAtRef.current = Date.now()
+          if (latestSnapshotRef.current === snapToPush) {
+            hasPendingCloudWriteRef.current = false
+            setCloudSyncStatus('synced')
+            setCloudSyncError(null)
+            setLastSyncedAt(new Date().toISOString())
+          }
+        })
+        .catch((err: unknown) => {
+          hasPendingCloudWriteRef.current = false
+          setCloudSyncStatus('error')
+          setCloudSyncError(
+            err instanceof Error ? err.message : 'Error guardando cambios en Supabase.',
+          )
+        })
+    },
+    [],
+  )
+
+  // Guardado reactivo ante ediciones del usuario (local en modo invitado o relacional en Supabase)
   useEffect(() => {
-    if (!isHydrated) return
-    if (skipInitialSaveRef.current) {
-      skipInitialSaveRef.current = false
+    if (!isHydrated || !targetScope || hydratedScopeRef.current !== targetScope) {
       return
     }
-    void saveAppSnapshot(snapshot)
-  }, [snapshot, isHydrated])
+    if (snapshot === lastLoadedRef.current) {
+      return
+    }
+    lastLoadedRef.current = snapshot
+
+    if (!activeUserId) {
+      void saveAppSnapshot(snapshot)
+      return
+    }
+
+    void saveUserCachedSnapshot(activeUserId, snapshot)
+    hasPendingCloudWriteRef.current = true
+
+    const timer = window.setTimeout(() => {
+      pushLatestToCloud(activeUserId, snapshot)
+    }, 350)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [snapshot, isHydrated, targetScope, activeUserId, pushLatestToCloud])
+
+  const refreshFromCloud = useCallback(async () => {
+    if (!activeUserId) return
+    const client = getSupabaseClient()
+    if (!client) return
+
+    if (hasPendingCloudWriteRef.current) {
+      pushLatestToCloud(activeUserId, latestSnapshotRef.current)
+      await syncChainRef.current
+      return
+    }
+
+    setCloudSyncStatus('syncing')
+    setCloudSyncError(null)
+    try {
+      const remote = await fetchUserCloudSnapshot(client, activeUserId)
+      if (remote.hasCloudData) {
+        await saveUserCachedSnapshot(activeUserId, remote.snapshot)
+        lastSyncedCloudRef.current = remote.snapshot
+        if (JSON.stringify(remote.snapshot) !== JSON.stringify(latestSnapshotRef.current)) {
+          lastLoadedRef.current = remote.snapshot
+          setSnapshot(remote.snapshot)
+        }
+      }
+      setCloudSyncStatus('synced')
+      setLastSyncedAt(new Date().toISOString())
+    } catch (err: unknown) {
+      setCloudSyncStatus('error')
+      setCloudSyncError(
+        err instanceof Error ? err.message : 'Error sincronizando datos desde Supabase.',
+      )
+    }
+  }, [activeUserId, pushLatestToCloud])
+
+  // Sincronización automática entre pestañas/dispositivos (Realtime + volver a la app en el móvil)
+  useEffect(() => {
+    if (!activeUserId || !isHydrated) return
+    const client = getSupabaseClient()
+    if (!client) return
+
+    let realtimeTimer: number | undefined
+    const scheduleRemotePull = () => {
+      if (hasPendingCloudWriteRef.current) return
+      if (Date.now() - lastLocalPushEndedAtRef.current < 1500) return
+      window.clearTimeout(realtimeTimer)
+      realtimeTimer = window.setTimeout(() => {
+        void refreshFromCloud()
+      }, 600)
+    }
+
+    const channel = client
+      .channel(`foodmanager-user-${activeUserId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'recipes', filter: `user_id=eq.${activeUserId}` },
+        scheduleRemotePull,
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'week_plans', filter: `user_id=eq.${activeUserId}` },
+        scheduleRemotePull,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'pantry_items',
+          filter: `user_id=eq.${activeUserId}`,
+        },
+        scheduleRemotePull,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_settings',
+          filter: `user_id=eq.${activeUserId}`,
+        },
+        scheduleRemotePull,
+      )
+      .subscribe()
+
+    const handleVisibilityOrOnline = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshFromCloud()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityOrOnline)
+    window.addEventListener('online', handleVisibilityOrOnline)
+
+    return () => {
+      window.clearTimeout(realtimeTimer)
+      document.removeEventListener('visibilitychange', handleVisibilityOrOnline)
+      window.removeEventListener('online', handleVisibilityOrOnline)
+      void client.removeChannel(channel)
+    }
+  }, [activeUserId, isHydrated, refreshFromCloud])
+
+  const importLocalGuestDataToCloud = useCallback(async () => {
+    const localGuestSnapshot = await loadAppSnapshot()
+    setSnapshot(localGuestSnapshot)
+  }, [])
 
   const currentWeekPlan = useMemo<WeekPlan>(() => {
     return snapshot.weekPlans[activeWeekStart] ?? createEmptyWeekPlan(activeWeekStart)
@@ -638,7 +915,7 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
 
   const clearAllData = useCallback(() => {
     setSnapshot({
-      version: 1,
+      version: 2,
       recipes: [],
       weekPlans: {},
       pantry: [],
@@ -650,6 +927,11 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
     () => ({
       isHydrated,
       snapshot,
+      cloudSyncStatus,
+      cloudSyncError,
+      lastSyncedAt,
+      refreshFromCloud,
+      importLocalGuestDataToCloud,
       activeWeekStart,
       setActiveWeekStart,
       goToWeekOffset,
@@ -688,6 +970,11 @@ export function FoodStoreProvider({ children }: { children: ReactNode }) {
     [
       isHydrated,
       snapshot,
+      cloudSyncStatus,
+      cloudSyncError,
+      lastSyncedAt,
+      refreshFromCloud,
+      importLocalGuestDataToCloud,
       activeWeekStart,
       goToWeekOffset,
       goToCurrentWeek,
